@@ -777,107 +777,97 @@ export default function CryptoPortfolio() {
         }
       }
 
-      // 4) Stock/TEFAS — own Vercel API route (no CORS issues) + multi-fallback
-      const allStockIds = [...new Set([
-        ...Object.keys(STOCK_DATA),
-        ...Object.values(portfolios).flat().map(p=>p.coinId).filter(id=>isStock(id))
-      ])];
+      // 4) Stock/TEFAS — Vercel API route + fallback
+      // Portföydeki hisseler + TÜM STOCK_DATA hisseleri
       const portfolioStockIds = [...new Set(Object.values(portfolios).flat().map(p=>p.coinId).filter(id=>isStock(id)))];
-      const stocksToFetch = [...new Set([...portfolioStockIds, ...allStockIds.slice(0, 30)])];
+      const allStockIds = Object.keys(STOCK_DATA);
+      const stocksToFetch = [...new Set([...portfolioStockIds, ...allStockIds])];
 
       if (stocksToFetch.length > 0) {
         const results = {};
         let stockSource = "";
 
-        // Strategy 1: Own Vercel API route (/api/stocks)
-        const tryOwnApi = async (symbols) => {
+        // Batch fetch function — tries own API route first
+        const fetchStockBatch = async (symbols) => {
+          // 1) Own Vercel API route (most reliable — no CORS)
           try {
             const baseUrl = window.location.origin;
             const url = `${baseUrl}/api/stocks?symbols=${symbols.join(",")}`;
-            const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-            if (!res.ok) return null;
-            const data = await res.json();
-            return data?.quoteResponse?.result || null;
-          } catch (e) { return null; }
-        };
+            const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.quoteResponse?.result?.length > 0) return { quotes: data.quoteResponse.result, src: "API" };
+            }
+          } catch (e) {}
 
-        // Strategy 2: Direct Yahoo Finance (some browsers allow, some don't)
-        const tryYahooDirect = async (symbols) => {
-          try {
-            const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(",")}&fields=regularMarketPrice,regularMarketChangePercent,shortName,currency`;
-            const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-            if (!res.ok) return null;
-            const data = await res.json();
-            return data?.quoteResponse?.result || null;
-          } catch (e) { return null; }
-        };
-
-        // Strategy 3: CORS proxies (last resort)
-        const tryProxy = async (symbols) => {
+          // 2) CORS proxies
           const proxies = [
-            (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+            (u) => `https://corsproxy.io/?key=55048a42&url=${encodeURIComponent(u)}`,
             (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+            (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
           ];
           const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(",")}&fields=regularMarketPrice,regularMarketChangePercent,shortName,currency`;
-          for (const p of proxies) {
+          for (const proxy of proxies) {
             try {
-              const res = await fetch(p(yahooUrl), { signal: AbortSignal.timeout(10000) });
+              const res = await fetch(proxy(yahooUrl), { signal: AbortSignal.timeout(12000) });
               if (!res.ok) continue;
-              const data = JSON.parse(await res.text());
-              if (data?.quoteResponse?.result) return data.quoteResponse.result;
+              const text = await res.text();
+              const data = JSON.parse(text);
+              if (data?.quoteResponse?.result?.length > 0) return { quotes: data.quoteResponse.result, src: "Proxy" };
             } catch (e) { continue; }
           }
+
           return null;
         };
 
-        // Execute strategies in order
-        for (let i = 0; i < stocksToFetch.length; i += 25) {
-          const batch = stocksToFetch.slice(i, i + 25);
-          let quotes = await tryOwnApi(batch);
-          if (!quotes) { quotes = await tryYahooDirect(batch); stockSource = "YahooDirect"; }
-          if (!quotes) { quotes = await tryProxy(batch); stockSource = "Proxy"; }
-          if (!quotes) { stockSource = "Cache"; break; }
-          if (!stockSource) stockSource = "API";
+        // Fetch in batches of 50
+        for (let i = 0; i < stocksToFetch.length; i += 50) {
+          const batch = stocksToFetch.slice(i, i + 50);
+          const result = await fetchStockBatch(batch);
 
-          quotes.forEach(q => {
-            const sym = q.symbol;
-            const info = STOCK_DATA[sym];
-            if (!info && !sym) return;
-            results[sym] = {
-              usd: q.regularMarketPrice || 0,
-              usd_24h_change: q.regularMarketChangePercent || 0,
-              usd_7d_change: 0,
-              usd_market_cap: 0,
-              currency: info?.currency || (q.currency === "TRY" ? "₺" : "$"),
-              market: info?.market || (sym?.endsWith(".IS") ? "bist" : "us"),
-            };
-          });
-          if (i + 25 < stocksToFetch.length) await new Promise(r => setTimeout(r, 200));
+          if (result) {
+            if (!stockSource) stockSource = result.src;
+            result.quotes.forEach(q => {
+              const sym = q.symbol;
+              const info = STOCK_DATA[sym];
+              if (!sym) return;
+              results[sym] = {
+                usd: q.regularMarketPrice || 0,
+                usd_24h_change: q.regularMarketChangePercent || 0,
+                usd_7d_change: 0,
+                usd_market_cap: 0,
+                currency: info?.currency || (q.currency === "TRY" ? "₺" : "$"),
+                market: info?.market || (sym.endsWith(".IS") ? "bist" : "us"),
+              };
+            });
+          } else {
+            stockSource = "Cache";
+            break; // If one batch fails, don't try more
+          }
+          if (i + 50 < stocksToFetch.length) await new Promise(r => setTimeout(r, 500));
         }
 
         if (Object.keys(results).length > 0) {
           Object.assign(allPrices, results);
           source += ` + ${stockSource}: ${Object.keys(results).length}`;
           log("price", true, `Hisse/Fon: ${Object.keys(results).length} (${stockSource})`);
-          // Cache
-          const sp = {};
-          Object.entries(results).forEach(([id, v]) => { sp[id] = { ...v, _ts: Date.now() }; });
+          // Cache all fetched
           try {
             const prev = JSON.parse(localStorage.getItem("cv_stock_prices") || "{}");
-            localStorage.setItem("cv_stock_prices", JSON.stringify({ ...prev, ...sp }));
+            const updated = { ...prev };
+            Object.entries(results).forEach(([id, v]) => { updated[id] = { ...v, _ts: Date.now() }; });
+            localStorage.setItem("cv_stock_prices", JSON.stringify(updated));
           } catch(e) {}
         } else {
-          // All strategies failed — load from cache
+          // Load from cache
           try {
             const cached = JSON.parse(localStorage.getItem("cv_stock_prices") || "{}");
             if (Object.keys(cached).length > 0) {
-              Object.entries(cached).forEach(([id, v]) => {
-                if (!allPrices[id]) allPrices[id] = v;
-              });
+              Object.entries(cached).forEach(([id, v]) => { if (!allPrices[id]) allPrices[id] = v; });
               source += ` + StockCache: ${Object.keys(cached).length}`;
             }
           } catch(e) {}
-          log("price", false, "Hisse/Fon: API bağlantısı kurulamadı, cache kullanıldı");
+          log("price", false, "Hisse/Fon: API erişilemedi, cache kullanıldı");
         }
       }
 
@@ -1043,6 +1033,210 @@ export default function CryptoPortfolio() {
     });
   }, [portfolios, prices]);
   const [marketFilter, setMarketFilter] = useState("all"); // all | crypto | bist | us | tefas
+  const [showReportNotif, setShowReportNotif] = useState(false);
+
+  // Ay sonu hatırlatma — her ay 25'inden sonra göster
+  useEffect(() => {
+    const today = new Date();
+    const day = today.getDate();
+    const key = `cv_report_${today.getFullYear()}_${today.getMonth()}`;
+    const generated = localStorage.getItem(key);
+    if (day >= 25 && !generated) setShowReportNotif(true);
+  }, []);
+
+  // PDF Rapor Oluştur
+  const generateReport = async () => {
+    // jsPDF'i dinamik yükle
+    if (!window.jspdf) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js";
+      document.head.appendChild(script);
+      await new Promise((res, rej) => { script.onload = res; script.onerror = rej; });
+    }
+    // jsPDF-AutoTable
+    if (!window.jspdf?.jsPDF?.API?.autoTable) {
+      const script2 = document.createElement("script");
+      script2.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js";
+      document.head.appendChild(script2);
+      await new Promise((res, rej) => { script2.onload = res; script2.onerror = rej; });
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
+    const w = doc.internal.pageSize.getWidth();
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+    const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    const monthName = now.toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+
+    // === SAYFA 1: Kapak + Özet ===
+    // Header bar
+    doc.setFillColor(15, 20, 30);
+    doc.rect(0, 0, w, 45, "F");
+    doc.setFillColor(247, 147, 26);
+    doc.rect(0, 43, w, 2, "F");
+
+    doc.setTextColor(247, 147, 26);
+    doc.setFontSize(28);
+    doc.text("CryptoVault", 20, 22);
+    doc.setFontSize(9);
+    doc.setTextColor(130, 140, 160);
+    doc.text("CRYPTO · BIST · TEFAS · US", 20, 30);
+    doc.text(`${dateStr} — ${timeStr}`, 20, 38);
+
+    doc.setFontSize(10);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`Kullanıcı: ${currentUser}`, w - 20, 30, { align: "right" });
+    doc.text(`Aktif Portföy: ${activePortfolio}`, w - 20, 38, { align: "right" });
+
+    // Başlık
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 60);
+    doc.text(`Aylık Portföy Raporu — ${monthName}`, 20, 60);
+
+    // Özet kartlar
+    let y = 72;
+    const drawSummaryBox = (x, label, value, color) => {
+      doc.setFillColor(245, 247, 250);
+      doc.roundedRect(x, y, 52, 28, 3, 3, "F");
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 140);
+      doc.text(label, x + 5, y + 10);
+      doc.setFontSize(14);
+      doc.setTextColor(...color);
+      doc.text(value, x + 5, y + 22);
+    };
+
+    const fmtR = (v) => v >= 1e6 ? `$${(v/1e6).toFixed(2)}M` : v >= 1e3 ? `$${(v/1e3).toFixed(1)}K` : `$${v.toFixed(2)}`;
+
+    drawSummaryBox(15, "Toplam Değer", fmtR(allTotVal), [30, 30, 50]);
+    drawSummaryBox(72, "Toplam Yatırım", fmtR(allTotInv), [60, 60, 80]);
+    drawSummaryBox(129, "Kar / Zarar", `${allTotPnl >= 0 ? "+" : ""}${fmtR(allTotPnl)}`, allTotPnl >= 0 ? [0, 180, 80] : [220, 60, 60]);
+
+    y += 34;
+
+    // Piyasa Dağılımı
+    doc.setFontSize(12);
+    doc.setTextColor(40, 40, 60);
+    doc.text("Piyasa Dağılımı", 20, y);
+    y += 8;
+
+    const mktTotals = {};
+    allPData.forEach(item => { const m = getMarketType(item.coinId); mktTotals[m] = (mktTotals[m] || 0) + item.currentValue; });
+    const mktColors = { crypto: [247, 147, 26], bist: [59, 130, 246], us: [139, 92, 246], tefas: [6, 182, 212] };
+    const mktLabels = { crypto: "Kripto", bist: "BIST", us: "ABD", tefas: "TEFAS" };
+    let barX = 20;
+    const barW = w - 40;
+    Object.entries(mktTotals).forEach(([m, val]) => {
+      const pct = allTotVal > 0 ? val / allTotVal : 0;
+      const segW = barW * pct;
+      doc.setFillColor(...(mktColors[m] || [140, 140, 160]));
+      doc.rect(barX, y, Math.max(segW, 1), 6, "F");
+      if (segW > 15) {
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`${mktLabels[m] || m} ${(pct * 100).toFixed(1)}%`, barX + 2, y + 4.5);
+      }
+      barX += segW;
+    });
+    y += 14;
+
+    // Portföy bazlı özet
+    if (Object.keys(portfolios).length > 1) {
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 60);
+      doc.text("Portföyler", 20, y);
+      y += 4;
+
+      const pSumData = portfolioSummaries.map(p => [
+        p.name,
+        fmtR(p.value),
+        fmtR(p.invested),
+        `${p.pnl >= 0 ? "+" : ""}${fmtR(p.pnl)}`,
+        `${p.pnlPct >= 0 ? "+" : ""}${p.pnlPct.toFixed(2)}%`,
+        String(p.count),
+      ]);
+
+      doc.autoTable({
+        startY: y,
+        head: [["Portföy", "Değer", "Yatırım", "K/Z", "K/Z %", "Varlık"]],
+        body: pSumData,
+        theme: "grid",
+        headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 8, fontStyle: "bold" },
+        bodyStyles: { fontSize: 8, textColor: [60, 60, 80] },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        margin: { left: 20, right: 20 },
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // === TÜM VARLIKLAR TABLOSU ===
+    doc.setFontSize(12);
+    doc.setTextColor(40, 40, 60);
+    doc.text("Tüm Varlıklar", 20, y);
+    y += 4;
+
+    const tableData = allPData.map(item => {
+      const mkt = getMarketType(item.coinId);
+      const cur = ALL_ASSETS[item.coinId]?.currency || "$";
+      const fmtV = (v) => cur === "₺" ? `₺${v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : fmtR(v);
+      return [
+        `${item.coin?.symbol || "?"} [${getMarketLabel(mkt)}]`,
+        item.totalAmount.toFixed(item.totalAmount < 1 ? 6 : 2),
+        fmtV(item.currentPrice),
+        fmtV(item.currentValue),
+        fmtV(item.totalInvested),
+        `${item.pnl >= 0 ? "+" : ""}${fmtV(item.pnl)}`,
+        `${item.pnlPct >= 0 ? "+" : ""}${item.pnlPct.toFixed(2)}%`,
+      ];
+    });
+
+    doc.autoTable({
+      startY: y,
+      head: [["Varlık", "Miktar", "Fiyat", "Değer", "Yatırım", "K/Z", "K/Z %"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 7, fontStyle: "bold" },
+      bodyStyles: { fontSize: 7, textColor: [60, 60, 80] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: 15, right: 15 },
+      columnStyles: {
+        5: { textColor: [0, 0, 0] },
+        6: { textColor: [0, 0, 0] },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && (data.column.index === 5 || data.column.index === 6)) {
+          const val = data.cell.raw;
+          if (val && val.startsWith("+")) data.cell.styles.textColor = [0, 160, 70];
+          else if (val && val.startsWith("-")) data.cell.styles.textColor = [200, 50, 50];
+        }
+      },
+    });
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(160, 160, 180);
+      doc.text(`CryptoVault Aylık Rapor — ${dateStr} — Sayfa ${i}/${pageCount}`, w / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
+    }
+
+    // Kaydet
+    const fileName = `CryptoVault_Rapor_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}.pdf`;
+    doc.save(fileName);
+
+    // İşaretle: bu ay rapor oluşturuldu
+    localStorage.setItem(`cv_report_${now.getFullYear()}_${now.getMonth()}`, "1");
+    setShowReportNotif(false);
+
+    // Rapor geçmişi kaydet
+    try {
+      const hist = JSON.parse(localStorage.getItem("cv_report_history") || "[]");
+      hist.push({ date: now.toISOString(), totVal: allTotVal, totInv: allTotInv, pnl: allTotPnl, assets: allPData.length });
+      localStorage.setItem("cv_report_history", JSON.stringify(hist.slice(-24)));
+    } catch(e) {}
+  };
   const allAssetList = useMemo(() => [...DEFAULT_COINS, ...Object.values(STOCK_DATA)], []);
   const filtered = allAssetList.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.symbol.toLowerCase().includes(search.toLowerCase());
@@ -1076,6 +1270,7 @@ export default function CryptoPortfolio() {
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <span style={{fontSize:12,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace"}}>👤 {currentUser}</span>
+          <button onClick={generateReport} style={{background:"#0d1f12",border:"1px solid #1a3320",color:"#48BB78",padding:"0 12px",height:34,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,position:"relative"}} title="PDF Rapor Oluştur">📄 Rapor{showReportNotif&&<span style={{position:"absolute",top:-2,right:-2,width:8,height:8,background:"#ff4466",borderRadius:"50%",border:"2px solid #0a0e17"}}/>}</button>
           <button onClick={()=>setShowSettings(true)} style={{background:"#111822",border:"1px solid #1a2332",color:"#8892a4",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}} title="Ayarlar">⚙</button>
           <button onClick={()=>{setIsLoggedIn(false);setCurrentUser("");try{localStorage.removeItem("cv_session");}catch(e){}}} style={{background:"#1a0d12",border:"1px solid #2a1520",color:"#ff4466",padding:"0 12px",height:34,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>Çıkış</button>
         </div>
@@ -1087,6 +1282,16 @@ export default function CryptoPortfolio() {
           </button>)}
       </nav>
       <main style={{padding:"20px 24px",maxWidth:1300,margin:"0 auto"}}>
+        {showReportNotif&&<div style={{background:"linear-gradient(135deg,#0d1f12,#111822)",border:"1px solid #1a3320",borderRadius:12,padding:"14px 20px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>📊</span>
+            <div><div style={{fontSize:13,color:"#48BB78",fontWeight:600}}>Aylık Rapor Zamanı</div><div style={{fontSize:11,color:"#4a5568",marginTop:2}}>Bu ay henüz portföy raporu oluşturmadınız</div></div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={generateReport} style={{background:"#48BB78",border:"none",color:"#000",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>Rapor Oluştur</button>
+            <button onClick={()=>setShowReportNotif(false)} style={{background:"none",border:"1px solid #1a3320",color:"#4a5568",padding:"8px 12px",borderRadius:8,cursor:"pointer",fontSize:12}}>Kapat</button>
+          </div>
+        </div>}
 
         {/* ═══ PORTFOLIO ═══ */}
         {tab==="portfolio"&&<div style={{animation:"fadeUp .4s ease-out"}}>
