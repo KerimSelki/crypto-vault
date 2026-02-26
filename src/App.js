@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 // ═══ Modüler Veri Kaynakları ═══
 import {
@@ -1140,7 +1140,7 @@ export default function CryptoPortfolio() {
           String(p.count),
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
           startY: y,
           head: [["Portfoy", "Deger", "Yatirim", "K/Z", "K/Z %", "Varlik"]],
           body: pSumData,
@@ -1174,7 +1174,7 @@ export default function CryptoPortfolio() {
         ];
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: y,
         head: [["Varlik", "Miktar", "Fiyat", "Deger", "Yatirim", "K/Z", "K/Z %"]],
         body: tableData,
