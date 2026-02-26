@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 // ═══ Modüler Veri Kaynakları ═══
 import {
@@ -1046,196 +1048,178 @@ export default function CryptoPortfolio() {
 
   // PDF Rapor Oluştur
   const generateReport = async () => {
-    // jsPDF'i dinamik yükle
-    if (!window.jspdf) {
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js";
-      document.head.appendChild(script);
-      await new Promise((res, rej) => { script.onload = res; script.onerror = rej; });
-    }
-    // jsPDF-AutoTable
-    if (!window.jspdf?.jsPDF?.API?.autoTable) {
-      const script2 = document.createElement("script");
-      script2.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js";
-      document.head.appendChild(script2);
-      await new Promise((res, rej) => { script2.onload = res; script2.onerror = rej; });
-    }
+    try {
+      const doc = new jsPDF("p", "mm", "a4");
+      const w = doc.internal.pageSize.getWidth();
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+      const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+      const monthName = now.toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
-    const w = doc.internal.pageSize.getWidth();
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
-    const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-    const monthName = now.toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+      // === SAYFA 1: Kapak + Özet ===
+      doc.setFillColor(15, 20, 30);
+      doc.rect(0, 0, w, 45, "F");
+      doc.setFillColor(247, 147, 26);
+      doc.rect(0, 43, w, 2, "F");
 
-    // === SAYFA 1: Kapak + Özet ===
-    // Header bar
-    doc.setFillColor(15, 20, 30);
-    doc.rect(0, 0, w, 45, "F");
-    doc.setFillColor(247, 147, 26);
-    doc.rect(0, 43, w, 2, "F");
+      doc.setTextColor(247, 147, 26);
+      doc.setFontSize(28);
+      doc.text("CryptoVault", 20, 22);
+      doc.setFontSize(9);
+      doc.setTextColor(130, 140, 160);
+      doc.text("CRYPTO  BIST  TEFAS  US", 20, 30);
+      doc.text(dateStr + " - " + timeStr, 20, 38);
 
-    doc.setTextColor(247, 147, 26);
-    doc.setFontSize(28);
-    doc.text("CryptoVault", 20, 22);
-    doc.setFontSize(9);
-    doc.setTextColor(130, 140, 160);
-    doc.text("CRYPTO · BIST · TEFAS · US", 20, 30);
-    doc.text(`${dateStr} — ${timeStr}`, 20, 38);
+      doc.setFontSize(10);
+      doc.setTextColor(180, 180, 180);
+      doc.text("Kullanici: " + currentUser, w - 20, 30, { align: "right" });
+      doc.text("Aktif Portfoy: " + activePortfolio, w - 20, 38, { align: "right" });
 
-    doc.setFontSize(10);
-    doc.setTextColor(180, 180, 180);
-    doc.text(`Kullanıcı: ${currentUser}`, w - 20, 30, { align: "right" });
-    doc.text(`Aktif Portföy: ${activePortfolio}`, w - 20, 38, { align: "right" });
+      doc.setFontSize(18);
+      doc.setTextColor(40, 40, 60);
+      doc.text("Aylik Portfoy Raporu - " + monthName, 20, 60);
 
-    // Başlık
-    doc.setFontSize(18);
-    doc.setTextColor(40, 40, 60);
-    doc.text(`Aylık Portföy Raporu — ${monthName}`, 20, 60);
+      // Özet kartlar
+      let y = 72;
+      const fmtR = (v) => v >= 1e6 ? "$" + (v/1e6).toFixed(2) + "M" : v >= 1e3 ? "$" + (v/1e3).toFixed(1) + "K" : "$" + v.toFixed(2);
 
-    // Özet kartlar
-    let y = 72;
-    const drawSummaryBox = (x, label, value, color) => {
-      doc.setFillColor(245, 247, 250);
-      doc.roundedRect(x, y, 52, 28, 3, 3, "F");
-      doc.setFontSize(8);
-      doc.setTextColor(120, 120, 140);
-      doc.text(label, x + 5, y + 10);
-      doc.setFontSize(14);
-      doc.setTextColor(...color);
-      doc.text(value, x + 5, y + 22);
-    };
+      const drawBox = (x, label, value, color) => {
+        doc.setFillColor(245, 247, 250);
+        doc.roundedRect(x, y, 52, 28, 3, 3, "F");
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 140);
+        doc.text(label, x + 5, y + 10);
+        doc.setFontSize(14);
+        doc.setTextColor(color[0], color[1], color[2]);
+        doc.text(value, x + 5, y + 22);
+      };
 
-    const fmtR = (v) => v >= 1e6 ? `$${(v/1e6).toFixed(2)}M` : v >= 1e3 ? `$${(v/1e3).toFixed(1)}K` : `$${v.toFixed(2)}`;
+      drawBox(15, "Toplam Deger", fmtR(allTotVal), [30, 30, 50]);
+      drawBox(72, "Toplam Yatirim", fmtR(allTotInv), [60, 60, 80]);
+      drawBox(129, "Kar / Zarar", (allTotPnl >= 0 ? "+" : "") + fmtR(Math.abs(allTotPnl)), allTotPnl >= 0 ? [0, 180, 80] : [220, 60, 60]);
 
-    drawSummaryBox(15, "Toplam Değer", fmtR(allTotVal), [30, 30, 50]);
-    drawSummaryBox(72, "Toplam Yatırım", fmtR(allTotInv), [60, 60, 80]);
-    drawSummaryBox(129, "Kar / Zarar", `${allTotPnl >= 0 ? "+" : ""}${fmtR(allTotPnl)}`, allTotPnl >= 0 ? [0, 180, 80] : [220, 60, 60]);
+      y += 34;
 
-    y += 34;
-
-    // Piyasa Dağılımı
-    doc.setFontSize(12);
-    doc.setTextColor(40, 40, 60);
-    doc.text("Piyasa Dağılımı", 20, y);
-    y += 8;
-
-    const mktTotals = {};
-    allPData.forEach(item => { const m = getMarketType(item.coinId); mktTotals[m] = (mktTotals[m] || 0) + item.currentValue; });
-    const mktColors = { crypto: [247, 147, 26], bist: [59, 130, 246], us: [139, 92, 246], tefas: [6, 182, 212] };
-    const mktLabels = { crypto: "Kripto", bist: "BIST", us: "ABD", tefas: "TEFAS" };
-    let barX = 20;
-    const barW = w - 40;
-    Object.entries(mktTotals).forEach(([m, val]) => {
-      const pct = allTotVal > 0 ? val / allTotVal : 0;
-      const segW = barW * pct;
-      doc.setFillColor(...(mktColors[m] || [140, 140, 160]));
-      doc.rect(barX, y, Math.max(segW, 1), 6, "F");
-      if (segW > 15) {
-        doc.setFontSize(7);
-        doc.setTextColor(255, 255, 255);
-        doc.text(`${mktLabels[m] || m} ${(pct * 100).toFixed(1)}%`, barX + 2, y + 4.5);
-      }
-      barX += segW;
-    });
-    y += 14;
-
-    // Portföy bazlı özet
-    if (Object.keys(portfolios).length > 1) {
+      // Piyasa Dağılımı
       doc.setFontSize(12);
       doc.setTextColor(40, 40, 60);
-      doc.text("Portföyler", 20, y);
+      doc.text("Piyasa Dagilimi", 20, y);
+      y += 8;
+
+      const mktTotals = {};
+      allPData.forEach(item => { const m = getMarketType(item.coinId); mktTotals[m] = (mktTotals[m] || 0) + item.currentValue; });
+      const mktColors = { crypto: [247, 147, 26], bist: [59, 130, 246], us: [139, 92, 246], tefas: [6, 182, 212] };
+      const mktLabels2 = { crypto: "Kripto", bist: "BIST", us: "ABD", tefas: "TEFAS" };
+      let barX = 20;
+      const barW = w - 40;
+      Object.entries(mktTotals).forEach(([m, val]) => {
+        const pct = allTotVal > 0 ? val / allTotVal : 0;
+        const segW = barW * pct;
+        doc.setFillColor(mktColors[m]?.[0]||140, mktColors[m]?.[1]||140, mktColors[m]?.[2]||160);
+        doc.rect(barX, y, Math.max(segW, 1), 6, "F");
+        if (segW > 20) {
+          doc.setFontSize(7);
+          doc.setTextColor(255, 255, 255);
+          doc.text((mktLabels2[m] || m) + " " + (pct * 100).toFixed(1) + "%", barX + 2, y + 4.5);
+        }
+        barX += segW;
+      });
+      y += 14;
+
+      // Portföy bazlı özet
+      if (Object.keys(portfolios).length > 1) {
+        doc.setFontSize(12);
+        doc.setTextColor(40, 40, 60);
+        doc.text("Portfolyolar", 20, y);
+        y += 4;
+
+        const pSumData = portfolioSummaries.map(p => [
+          p.name, fmtR(p.value), fmtR(p.invested),
+          (p.pnl >= 0 ? "+" : "") + fmtR(Math.abs(p.pnl)),
+          (p.pnlPct >= 0 ? "+" : "") + p.pnlPct.toFixed(2) + "%",
+          String(p.count),
+        ]);
+
+        doc.autoTable({
+          startY: y,
+          head: [["Portfoy", "Deger", "Yatirim", "K/Z", "K/Z %", "Varlik"]],
+          body: pSumData,
+          theme: "grid",
+          headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 8, fontStyle: "bold" },
+          bodyStyles: { fontSize: 8, textColor: [60, 60, 80] },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          margin: { left: 20, right: 20 },
+        });
+        y = doc.lastAutoTable.finalY + 10;
+      }
+
+      // Tüm varlıklar tablosu
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 60);
+      doc.text("Tum Varliklar", 20, y);
       y += 4;
 
-      const pSumData = portfolioSummaries.map(p => [
-        p.name,
-        fmtR(p.value),
-        fmtR(p.invested),
-        `${p.pnl >= 0 ? "+" : ""}${fmtR(p.pnl)}`,
-        `${p.pnlPct >= 0 ? "+" : ""}${p.pnlPct.toFixed(2)}%`,
-        String(p.count),
-      ]);
+      const tableData = allPData.map(item => {
+        const mkt = getMarketType(item.coinId);
+        const cur = ALL_ASSETS[item.coinId]?.currency || "$";
+        const fV = (v) => cur === "₺" ? v.toFixed(2) + " TL" : fmtR(v);
+        return [
+          (item.coin?.symbol || "?") + " [" + getMarketLabel(mkt) + "]",
+          item.totalAmount.toFixed(item.totalAmount < 1 ? 6 : 2),
+          fV(item.currentPrice),
+          fV(item.currentValue),
+          fV(item.totalInvested),
+          (item.pnl >= 0 ? "+" : "-") + fV(Math.abs(item.pnl)),
+          (item.pnlPct >= 0 ? "+" : "") + item.pnlPct.toFixed(2) + "%",
+        ];
+      });
 
       doc.autoTable({
         startY: y,
-        head: [["Portföy", "Değer", "Yatırım", "K/Z", "K/Z %", "Varlık"]],
-        body: pSumData,
+        head: [["Varlik", "Miktar", "Fiyat", "Deger", "Yatirim", "K/Z", "K/Z %"]],
+        body: tableData,
         theme: "grid",
-        headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 8, fontStyle: "bold" },
-        bodyStyles: { fontSize: 8, textColor: [60, 60, 80] },
+        headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 7, fontStyle: "bold" },
+        bodyStyles: { fontSize: 7, textColor: [60, 60, 80] },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        margin: { left: 20, right: 20 },
+        margin: { left: 15, right: 15 },
+        didParseCell: (data) => {
+          if (data.section === "body" && (data.column.index === 5 || data.column.index === 6)) {
+            const val = data.cell.raw || "";
+            if (val.startsWith("+")) data.cell.styles.textColor = [0, 160, 70];
+            else if (val.startsWith("-")) data.cell.styles.textColor = [200, 50, 50];
+          }
+        },
       });
-      y = doc.lastAutoTable.finalY + 10;
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(160, 160, 180);
+        doc.text("CryptoVault Aylik Rapor - " + dateStr + " - Sayfa " + i + "/" + pageCount, w / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
+      }
+
+      // Kaydet
+      const fileName = "CryptoVault_Rapor_" + now.getFullYear() + "_" + String(now.getMonth() + 1).padStart(2, "0") + ".pdf";
+      doc.save(fileName);
+
+      // İşaretle
+      localStorage.setItem("cv_report_" + now.getFullYear() + "_" + now.getMonth(), "1");
+      setShowReportNotif(false);
+
+      // Rapor geçmişi
+      try {
+        const hist = JSON.parse(localStorage.getItem("cv_report_history") || "[]");
+        hist.push({ date: now.toISOString(), totVal: allTotVal, totInv: allTotInv, pnl: allTotPnl, assets: allPData.length });
+        localStorage.setItem("cv_report_history", JSON.stringify(hist.slice(-24)));
+      } catch(e) {}
+
+    } catch (err) {
+      console.error("PDF rapor hatasi:", err);
+      alert("Rapor olusturulurken hata olustu: " + err.message);
     }
-
-    // === TÜM VARLIKLAR TABLOSU ===
-    doc.setFontSize(12);
-    doc.setTextColor(40, 40, 60);
-    doc.text("Tüm Varlıklar", 20, y);
-    y += 4;
-
-    const tableData = allPData.map(item => {
-      const mkt = getMarketType(item.coinId);
-      const cur = ALL_ASSETS[item.coinId]?.currency || "$";
-      const fmtV = (v) => cur === "₺" ? `₺${v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : fmtR(v);
-      return [
-        `${item.coin?.symbol || "?"} [${getMarketLabel(mkt)}]`,
-        item.totalAmount.toFixed(item.totalAmount < 1 ? 6 : 2),
-        fmtV(item.currentPrice),
-        fmtV(item.currentValue),
-        fmtV(item.totalInvested),
-        `${item.pnl >= 0 ? "+" : ""}${fmtV(item.pnl)}`,
-        `${item.pnlPct >= 0 ? "+" : ""}${item.pnlPct.toFixed(2)}%`,
-      ];
-    });
-
-    doc.autoTable({
-      startY: y,
-      head: [["Varlık", "Miktar", "Fiyat", "Değer", "Yatırım", "K/Z", "K/Z %"]],
-      body: tableData,
-      theme: "grid",
-      headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 7, fontStyle: "bold" },
-      bodyStyles: { fontSize: 7, textColor: [60, 60, 80] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      margin: { left: 15, right: 15 },
-      columnStyles: {
-        5: { textColor: [0, 0, 0] },
-        6: { textColor: [0, 0, 0] },
-      },
-      didParseCell: (data) => {
-        if (data.section === "body" && (data.column.index === 5 || data.column.index === 6)) {
-          const val = data.cell.raw;
-          if (val && val.startsWith("+")) data.cell.styles.textColor = [0, 160, 70];
-          else if (val && val.startsWith("-")) data.cell.styles.textColor = [200, 50, 50];
-        }
-      },
-    });
-
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(7);
-      doc.setTextColor(160, 160, 180);
-      doc.text(`CryptoVault Aylık Rapor — ${dateStr} — Sayfa ${i}/${pageCount}`, w / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
-    }
-
-    // Kaydet
-    const fileName = `CryptoVault_Rapor_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}.pdf`;
-    doc.save(fileName);
-
-    // İşaretle: bu ay rapor oluşturuldu
-    localStorage.setItem(`cv_report_${now.getFullYear()}_${now.getMonth()}`, "1");
-    setShowReportNotif(false);
-
-    // Rapor geçmişi kaydet
-    try {
-      const hist = JSON.parse(localStorage.getItem("cv_report_history") || "[]");
-      hist.push({ date: now.toISOString(), totVal: allTotVal, totInv: allTotInv, pnl: allTotPnl, assets: allPData.length });
-      localStorage.setItem("cv_report_history", JSON.stringify(hist.slice(-24)));
-    } catch(e) {}
   };
   const allAssetList = useMemo(() => [...DEFAULT_COINS, ...Object.values(STOCK_DATA)], []);
   const filtered = allAssetList.filter(c => {
