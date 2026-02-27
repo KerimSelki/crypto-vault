@@ -1318,24 +1318,16 @@ export default function CryptoPortfolio() {
 
   if (!isLoggedIn) return <AuthScreen onLogin={(user) => { setCurrentUser(user); setIsLoggedIn(true); }} />;
 
-  if(loading) return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#0a0e17",fontFamily:"'Outfit',sans-serif"}}>
-      <div style={{textAlign:"center",animation:"pulse 2s infinite"}}>
-        <div style={{fontSize:56,color:"#F7931A",marginBottom:16,fontFamily:"'Space Mono',monospace"}}>◈</div>
-        <div style={{color:"#8892a4",fontSize:16,marginBottom:20}}>{connStatus==="retrying"?`Bağlantı kurulamadı (${retryCount}/${MAX_RETRIES})...`:connStatus==="ratelimited"?"Rate limit — Bekleniyor...":"CoinGecko'ya bağlanılıyor..."}</div>
-        <div style={{width:200,height:3,background:"#1a2332",borderRadius:2,overflow:"hidden",margin:"0 auto"}}><div style={{height:"100%",background:"linear-gradient(90deg,#F7931A,#ff6b00)",borderRadius:2,animation:"loadBar 2s ease-in-out infinite"}}/></div>
-        {connStatus==="retrying"&&<button onClick={retry} style={{marginTop:16,padding:"8px 20px",background:"#111822",border:"1px solid #1e2a3a",color:"#F7931A",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>↻ Hemen Dene</button>}
-      </div>
-    </div>
-  );
+  // Loading artık sayfayı bloklamaz — skeleton gösterilir
+  const isLoading = loading && Object.keys(prices).length === 0;
 
   return (
     <div style={{fontFamily:"'Outfit',sans-serif",background:"linear-gradient(180deg,#0a0e17 0%,#0d1420 50%,#0a0e17 100%)",minHeight:"100vh",color:"#e2e8f0"}}>
-      <header style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 24px",borderBottom:"1px solid #151d2b",background:"rgba(10,14,23,.9)",backdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100}}>
+      <header style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 24px",borderBottom:"none",background:"rgba(10,14,23,.95)",backdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:28,color:"#F7931A",fontWeight:700}}>◈</span>
           <div><span style={{fontSize:22,fontWeight:700,fontFamily:"'Space Mono',monospace",color:"#fff"}}>CryptoVault</span><div style={{fontSize:10,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1}}>CRYPTO · BIST · TEFAS · US</div></div>
-          <div style={{width:8,height:8,borderRadius:"50%",marginLeft:8,background:connStatus==="connected"?"#00ff88":connStatus==="connecting"||connStatus==="retrying"?"#ffaa00":"#ff4466",boxShadow:`0 0 8px ${connStatus==="connected"?"#00ff8844":"#ff446644"}`,transition:"background .3s"}} title={connStatus==="connected"?"Canlı bağlantı":connStatus==="connecting"?"Bağlanıyor...":connStatus==="demo"?"Demo modu":"Hata"}/>
+          <div style={{width:8,height:8,borderRadius:"50%",marginLeft:8,background:connStatus==="connected"?"#00ff88":connStatus==="connecting"||connStatus==="retrying"?"#ffaa00":"#ff4466",boxShadow:`0 0 8px ${connStatus==="connected"?"#00ff8844":"#ff446644"}`,transition:"background .3s"}} title={connStatus==="connected"?"Canlı veri":connStatus==="connecting"?"Bağlanıyor...":connStatus==="demo"?"Demo modu":"Hata"}/>
           {lastUpdate&&<span style={{fontSize:10,color:"#2d3a4a",fontFamily:"'JetBrains Mono',monospace",marginLeft:4}}>{lastUpdate.toLocaleTimeString("tr-TR")}</span>}
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -1346,6 +1338,8 @@ export default function CryptoPortfolio() {
           <button onClick={()=>{setIsLoggedIn(false);setCurrentUser("");try{localStorage.removeItem("cv_session");}catch(e){}}} style={{background:"#1a0d12",border:"1px solid #2a1520",color:"#ff4466",padding:"0 12px",height:34,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>Çıkış</button>
         </div>
       </header>
+      {/* Loading indicator — header altında ince bar */}
+      {isLoading&&<div style={{width:"100%",height:2,background:"#1a2332",overflow:"hidden"}}><div style={{height:"100%",background:"linear-gradient(90deg,#F7931A,#ff6b00,#F7931A)",backgroundSize:"200% 100%",animation:"shimmer 1.5s infinite linear"}}/></div>}
       <nav style={{display:"flex",gap:4,padding:"10px 24px",borderBottom:"1px solid #111822",overflowX:"auto"}}>
         {[{id:"overview",lbl:"Dashboard",ic:"⊞"},{id:"portfolio",lbl:"Portföy",ic:"◎"},{id:"market",lbl:"Piyasa",ic:"◉"}].map(t=>
           <button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"9px 18px",background:tab===t.id?"#111822":"transparent",border:tab===t.id?"1px solid #1e2a3a":"1px solid transparent",color:tab===t.id?"#F7931A":"#4a5568",fontSize:13,fontWeight:500,cursor:"pointer",borderRadius:8,display:"flex",alignItems:"center",gap:6,fontFamily:"'Outfit',sans-serif",position:"relative",whiteSpace:"nowrap"}}>
@@ -1542,9 +1536,9 @@ export default function CryptoPortfolio() {
         {tab==="overview"&&<div style={{animation:"fadeUp .4s ease-out"}}>
           {/* Summary Cards */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14,marginBottom:20}}>
-            <div style={{...st.card,background:"linear-gradient(135deg,#1a1508,#1a1000)",border:"1px solid #3d2800"}}><div style={{fontSize:11,color:"#4a5568",textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontWeight:500}}>Toplam Değer</div><div style={{fontSize:28,fontWeight:700,fontFamily:"'Space Mono',monospace",color:"#fff"}}>{fmt(allTotVal)}</div><div style={{fontSize:13,marginTop:6,fontFamily:"'JetBrains Mono',monospace",color:allTot24h>=0?"#00ff88":"#ff4466"}}>{allTot24h>=0?"▲":"▼"} {fmt(Math.abs(allTot24h))} (24s)</div></div>
-            <div style={st.card}><div style={{fontSize:11,color:"#4a5568",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Toplam Yatırım</div><div style={{fontSize:20,fontWeight:700,fontFamily:"'Space Mono',monospace"}}>{fmt(allTotInv)}</div></div>
-            <div style={st.card}><div style={{fontSize:11,color:"#4a5568",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Kar / Zarar</div><div style={{fontSize:20,fontWeight:700,fontFamily:"'Space Mono',monospace",color:allTotPnl>=0?"#00ff88":"#ff4466"}}>{allTotPnl>=0?"+":""}{fmt(allTotPnl)}</div><div style={{fontSize:12,marginTop:2,fontFamily:"'JetBrains Mono',monospace",color:allTotPnl>=0?"#00ff88":"#ff4466"}}>{fPct(allTotPnlPct)}</div></div>
+            <div style={{...st.card,background:"linear-gradient(135deg,#1a1508,#1a1000)",border:"1px solid #3d2800"}}><div style={{fontSize:11,color:"#4a5568",textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontWeight:500}}>Toplam Değer</div><div style={{fontSize:28,fontWeight:700,fontFamily:"'Space Mono',monospace",color:"#fff"}}>{isLoading?<span style={{display:"inline-block",width:120,height:28,background:"#1a2332",borderRadius:6,animation:"skeletonPulse 1.5s infinite"}}/>:fmt(allTotVal)}</div><div style={{fontSize:13,marginTop:6,fontFamily:"'JetBrains Mono',monospace",color:allTot24h>=0?"#00ff88":"#ff4466"}}>{isLoading?"":`${allTot24h>=0?"▲":"▼"} ${fmt(Math.abs(allTot24h))} (24s)`}</div></div>
+            <div style={st.card}><div style={{fontSize:11,color:"#4a5568",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Toplam Yatırım</div><div style={{fontSize:20,fontWeight:700,fontFamily:"'Space Mono',monospace"}}>{isLoading?<span style={{display:"inline-block",width:100,height:20,background:"#1a2332",borderRadius:6,animation:"skeletonPulse 1.5s infinite"}}/>:fmt(allTotInv)}</div></div>
+            <div style={st.card}><div style={{fontSize:11,color:"#4a5568",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Kar / Zarar</div><div style={{fontSize:20,fontWeight:700,fontFamily:"'Space Mono',monospace",color:allTotPnl>=0?"#00ff88":"#ff4466"}}>{isLoading?<span style={{display:"inline-block",width:100,height:20,background:"#1a2332",borderRadius:6,animation:"skeletonPulse 1.5s infinite"}}/>:<>{allTotPnl>=0?"+":""}{fmt(allTotPnl)}</>}</div>{!isLoading&&<div style={{fontSize:12,marginTop:2,fontFamily:"'JetBrains Mono',monospace",color:allTotPnl>=0?"#00ff88":"#ff4466"}}>{fPct(allTotPnlPct)}</div>}</div>
           </div>
 
           {/* Market Distribution Bar */}
@@ -1915,6 +1909,8 @@ export default function CryptoPortfolio() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
         @keyframes loadBar{0%{width:0}50%{width:70%}100%{width:100%}}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes skeletonPulse{0%,100%{opacity:.15}50%{opacity:.3}}
         ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0d1117}::-webkit-scrollbar-thumb{background:#1e2a3a;border-radius:3px}
         table{border-collapse:collapse}select option{background:#131a27;color:#e2e8f0}
       `}</style>
