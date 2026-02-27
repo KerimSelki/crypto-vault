@@ -868,69 +868,77 @@ export default function CryptoPortfolio() {
         }
       }
 
-      // 4) Stock/TEFAS — Financial Modeling Prep API (CORS-free, fast)
+      // 4) Hisse/ETF — BIST için Yahoo (Vercel proxy), US için FMP
       const FMP_KEY = "00rEssEWw276o3NRJY1BcLH1ACQGb1D6";
       const portfolioStockIds = [...new Set(Object.values(portfolios).flat().map(p=>p.coinId).filter(id=>isStock(id)))];
       const allStockIds = Object.keys(STOCK_DATA);
-      // Portföydeki hisseler öncelikli, sonra ilk 50 STOCK_DATA
       const stocksToFetch = [...new Set([...portfolioStockIds, ...allStockIds.slice(0, 80)])];
+
+      // BIST (.IS) ve US hisselerini ayır
+      const bistStocks = stocksToFetch.filter(s => s.endsWith(".IS"));
+      const usStocks = stocksToFetch.filter(s => !s.endsWith(".IS") && !s.endsWith(".TEFAS"));
 
       if (stocksToFetch.length > 0) {
         const results = {};
         let stockSource = "";
 
-        // FMP sembol formatı: THYAO.IS → THYAO.IS (aynı), AAPL → AAPL (aynı)
-        const fetchFMPBatch = async (symbols) => {
-          try {
-            const symStr = symbols.join(",");
-            const url = `https://financialmodelingprep.com/api/v3/quote/${symStr}?apikey=${FMP_KEY}`;
-            const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-            if (!res.ok) return null;
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) return { quotes: data, src: "FMP" };
-          } catch (e) {}
-
-          // Fallback: Own Vercel API route (Yahoo Finance proxy)
-          try {
-            const baseUrl = window.location.origin;
-            const url = `${baseUrl}/api/stocks?symbols=${symbols.join(",")}`;
-            const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-            if (res.ok) {
-              const data = await res.json();
-              if (data?.quoteResponse?.result?.length > 0) return { quotes: data.quoteResponse.result.map(q => ({
-                symbol: q.symbol, price: q.regularMarketPrice, changesPercentage: q.regularMarketChangePercent, currency: q.currency
-              })), src: "Yahoo" };
-            }
-          } catch (e) {}
-
-          return null;
-        };
-
-        // FMP batch: 50 sembol/request (günlük 250 çağrı limiti — dikkatli kullan)
-        for (let i = 0; i < stocksToFetch.length; i += 50) {
-          const batch = stocksToFetch.slice(i, i + 50);
-          const result = await fetchFMPBatch(batch);
-
-          if (result) {
-            if (!stockSource) stockSource = result.src;
-            result.quotes.forEach(q => {
-              const sym = q.symbol;
-              const info = STOCK_DATA[sym];
-              if (!sym) return;
-              results[sym] = {
-                usd: q.price || q.regularMarketPrice || 0,
-                usd_24h_change: q.changesPercentage || q.regularMarketChangePercent || 0,
-                usd_7d_change: 0,
-                usd_market_cap: q.marketCap || 0,
-                currency: info?.currency || (q.currency === "TRY" ? "₺" : "$"),
-                market: info?.market || (sym.endsWith(".IS") ? "bist" : "us"),
-              };
-            });
-          } else {
-            stockSource = "Cache";
-            break;
+        // A) US hisseleri → FMP API (CORS-free, hızlı)
+        if (usStocks.length > 0) {
+          for (let i = 0; i < usStocks.length; i += 50) {
+            const batch = usStocks.slice(i, i + 50);
+            try {
+              const url = `https://financialmodelingprep.com/api/v3/quote/${batch.join(",")}?apikey=${FMP_KEY}`;
+              const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+              if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                  data.forEach(q => {
+                    if (!q.symbol) return;
+                    results[q.symbol] = {
+                      usd: q.price || 0,
+                      usd_24h_change: q.changesPercentage || 0,
+                      usd_7d_change: 0,
+                      usd_market_cap: q.marketCap || 0,
+                      currency: "$",
+                      market: "us",
+                    };
+                  });
+                  if (!stockSource) stockSource = "FMP";
+                }
+              }
+            } catch (e) {}
+            if (i + 50 < usStocks.length) await new Promise(r => setTimeout(r, 300));
           }
-          if (i + 50 < stocksToFetch.length) await new Promise(r => setTimeout(r, 300));
+        }
+
+        // B) BIST hisseleri → Yahoo Finance (Vercel proxy)
+        if (bistStocks.length > 0) {
+          for (let i = 0; i < bistStocks.length; i += 50) {
+            const batch = bistStocks.slice(i, i + 50);
+            try {
+              const baseUrl = window.location.origin;
+              const url = `${baseUrl}/api/stocks?symbols=${batch.join(",")}`;
+              const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+              if (res.ok) {
+                const data = await res.json();
+                if (data?.quoteResponse?.result?.length > 0) {
+                  data.quoteResponse.result.forEach(q => {
+                    if (!q.symbol) return;
+                    results[q.symbol] = {
+                      usd: q.regularMarketPrice || 0,
+                      usd_24h_change: q.regularMarketChangePercent || 0,
+                      usd_7d_change: 0,
+                      usd_market_cap: 0,
+                      currency: "₺",
+                      market: "bist",
+                    };
+                  });
+                  stockSource = stockSource ? stockSource + "+Yahoo" : "Yahoo";
+                }
+              }
+            } catch (e) {}
+            if (i + 50 < bistStocks.length) await new Promise(r => setTimeout(r, 500));
+          }
         }
 
         if (Object.keys(results).length > 0) {
