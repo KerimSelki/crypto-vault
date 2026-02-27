@@ -779,53 +779,48 @@ export default function CryptoPortfolio() {
         }
       }
 
-      // 4) Stock/TEFAS — Vercel API route + fallback
-      // Portföydeki hisseler + TÜM STOCK_DATA hisseleri
+      // 4) Stock/TEFAS — Financial Modeling Prep API (CORS-free, fast)
+      const FMP_KEY = "00rEssEWw276o3NRJY1BcLH1ACQGb1D6";
       const portfolioStockIds = [...new Set(Object.values(portfolios).flat().map(p=>p.coinId).filter(id=>isStock(id)))];
       const allStockIds = Object.keys(STOCK_DATA);
-      const stocksToFetch = [...new Set([...portfolioStockIds, ...allStockIds])];
+      // Portföydeki hisseler öncelikli, sonra ilk 50 STOCK_DATA
+      const stocksToFetch = [...new Set([...portfolioStockIds, ...allStockIds.slice(0, 80)])];
 
       if (stocksToFetch.length > 0) {
         const results = {};
         let stockSource = "";
 
-        // Batch fetch function — tries own API route first
-        const fetchStockBatch = async (symbols) => {
-          // 1) Own Vercel API route (most reliable — no CORS)
+        // FMP sembol formatı: THYAO.IS → THYAO.IS (aynı), AAPL → AAPL (aynı)
+        const fetchFMPBatch = async (symbols) => {
+          try {
+            const symStr = symbols.join(",");
+            const url = `https://financialmodelingprep.com/api/v3/quote/${symStr}?apikey=${FMP_KEY}`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) return { quotes: data, src: "FMP" };
+          } catch (e) {}
+
+          // Fallback: Own Vercel API route (Yahoo Finance proxy)
           try {
             const baseUrl = window.location.origin;
             const url = `${baseUrl}/api/stocks?symbols=${symbols.join(",")}`;
-            const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+            const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
             if (res.ok) {
               const data = await res.json();
-              if (data?.quoteResponse?.result?.length > 0) return { quotes: data.quoteResponse.result, src: "API" };
+              if (data?.quoteResponse?.result?.length > 0) return { quotes: data.quoteResponse.result.map(q => ({
+                symbol: q.symbol, price: q.regularMarketPrice, changesPercentage: q.regularMarketChangePercent, currency: q.currency
+              })), src: "Yahoo" };
             }
           } catch (e) {}
-
-          // 2) CORS proxies
-          const proxies = [
-            (u) => `https://corsproxy.io/?key=55048a42&url=${encodeURIComponent(u)}`,
-            (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-            (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-          ];
-          const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(",")}&fields=regularMarketPrice,regularMarketChangePercent,shortName,currency`;
-          for (const proxy of proxies) {
-            try {
-              const res = await fetch(proxy(yahooUrl), { signal: AbortSignal.timeout(12000) });
-              if (!res.ok) continue;
-              const text = await res.text();
-              const data = JSON.parse(text);
-              if (data?.quoteResponse?.result?.length > 0) return { quotes: data.quoteResponse.result, src: "Proxy" };
-            } catch (e) { continue; }
-          }
 
           return null;
         };
 
-        // Fetch in batches of 50
+        // FMP batch: 50 sembol/request (günlük 250 çağrı limiti — dikkatli kullan)
         for (let i = 0; i < stocksToFetch.length; i += 50) {
           const batch = stocksToFetch.slice(i, i + 50);
-          const result = await fetchStockBatch(batch);
+          const result = await fetchFMPBatch(batch);
 
           if (result) {
             if (!stockSource) stockSource = result.src;
@@ -834,19 +829,19 @@ export default function CryptoPortfolio() {
               const info = STOCK_DATA[sym];
               if (!sym) return;
               results[sym] = {
-                usd: q.regularMarketPrice || 0,
-                usd_24h_change: q.regularMarketChangePercent || 0,
+                usd: q.price || q.regularMarketPrice || 0,
+                usd_24h_change: q.changesPercentage || q.regularMarketChangePercent || 0,
                 usd_7d_change: 0,
-                usd_market_cap: 0,
+                usd_market_cap: q.marketCap || 0,
                 currency: info?.currency || (q.currency === "TRY" ? "₺" : "$"),
                 market: info?.market || (sym.endsWith(".IS") ? "bist" : "us"),
               };
             });
           } else {
             stockSource = "Cache";
-            break; // If one batch fails, don't try more
+            break;
           }
-          if (i + 50 < stocksToFetch.length) await new Promise(r => setTimeout(r, 500));
+          if (i + 50 < stocksToFetch.length) await new Promise(r => setTimeout(r, 300));
         }
 
         if (Object.keys(results).length > 0) {
