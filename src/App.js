@@ -152,19 +152,19 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins, fmpStocks }
 
   return (
     <div ref={wrapperRef} style={{ position: "relative" }}>
-      <label style={{display:"block",fontSize:11,color:T.textSecondary,marginBottom:6,fontWeight:500,textTransform:"uppercase",letterSpacing:.5}}>Varlık Ara & Seç</label>
+      <label style={{display:"block",fontSize:11,color:"#8B8EA0",marginBottom:6,fontWeight:500,textTransform:"uppercase",letterSpacing:.5}}>Varlık Ara & Seç</label>
 
       {/* Selected display */}
       {selected && !isOpen && (
         <div onClick={() => { setIsOpen(true); setQuery(""); }}
-          style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:T.bgInput,border:"1px solid ${T.borderLight}",borderRadius:8,cursor:"pointer",transition:"border-color .2s"}}>
+          style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#0E1018",border:"1px solid #2A2D45",borderRadius:8,cursor:"pointer",transition:"border-color .2s"}}>
           {selected.thumb ? <img src={selected.thumb} alt="" style={{width:24,height:24,borderRadius:6}}/> :
             <div style={{width:24,height:24,borderRadius:6,background:"#9333EA22",color:"#9333EA",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:"'Inter',monospace"}}>{selected.symbol?.charAt(0)}</div>}
           <div style={{flex:1}}>
-            <span style={{fontWeight:600,fontSize:14,color:T.text}}>{selected.name}</span>
-            <span style={{fontSize:12,color:T.textMuted,marginLeft:8,fontFamily:"'JetBrains Mono',monospace"}}>{selected.symbol}</span>
+            <span style={{fontWeight:600,fontSize:14,color:"#E8E9ED"}}>{selected.name}</span>
+            <span style={{fontSize:12,color:"#4A4D65",marginLeft:8,fontFamily:"'JetBrains Mono',monospace"}}>{selected.symbol}</span>
           </div>
-          <span style={{fontSize:12,color:T.textMuted}}>Değiştir ▾</span>
+          <span style={{fontSize:12,color:"#4A4D65"}}>Değiştir ▾</span>
         </div>
       )}
 
@@ -177,43 +177,43 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins, fmpStocks }
             onChange={handleInput}
             onFocus={() => setIsOpen(true)}
             placeholder="BTC, THYAO, AAPL, IPB... yazın"
-            style={{width:"100%",padding:"10px 12px 10px 36px",background:T.bgInput,border:"1px solid #9333EA44",borderRadius:8,color:T.text,fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}
+            style={{width:"100%",padding:"10px 12px 10px 36px",background:"#0E1018",border:"1px solid #9333EA44",borderRadius:8,color:"#E8E9ED",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}
           />
-          <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:T.textMuted,fontSize:14}}>🔍</span>
+          <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#4A4D65",fontSize:14}}>🔍</span>
           {searching && <span style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",color:"#9333EA",fontSize:12,animation:"spin 1s linear infinite"}}>◌</span>}
         </div>
       )}
 
       {/* Dropdown results */}
       {isOpen && (
-        <div style={{position:"absolute",top:"100%",left:0,right:0,marginTop:4,background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:10,maxHeight:280,overflowY:"auto",zIndex:50,boxShadow:"0 12px 40px rgba(0,0,0,.5)"}}>
+        <div style={{position:"absolute",top:"100%",left:0,right:0,marginTop:4,background:"#151720",border:"1px solid #2A2D45",borderRadius:10,maxHeight:280,overflowY:"auto",zIndex:50,boxShadow:"0 12px 40px rgba(0,0,0,.5)"}}>
           {/* Show default coins when no search */}
           {query.length < 2 && (
             <>
-              <div style={{padding:"8px 12px",fontSize:11,color:T.textMuted,textTransform:"uppercase",letterSpacing:.5,borderBottom:`1px solid ${T.border}`}}>Popüler Kriptolar</div>
+              <div style={{padding:"8px 12px",fontSize:11,color:"#4A4D65",textTransform:"uppercase",letterSpacing:.5,borderBottom:`1px solid #1E2035`}}>Popüler Kriptolar</div>
               {DEFAULT_COINS.slice(0,8).map(coin => {
                 const p = prices[coin.id];
                 return (
                   <div key={coin.id} onClick={() => selectCoin(coin)}
-                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer",borderBottom:"1px solid ${T.bgCardSolid}",transition:"background .15s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background=T.border} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer",borderBottom:`1px solid #151720`,transition:"background .15s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="#1E2035"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                     <div style={{width:28,height:28,borderRadius:7,background:"#9333EA15",color:"#9333EA",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:"'Inter',monospace"}}>{coin.symbol.charAt(0)}</div>
-                    <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13,color:T.text}}>{coin.name}</div><div style={{fontSize:11,color:T.textMuted,fontFamily:"'JetBrains Mono',monospace"}}>{coin.symbol}</div></div>
-                    {p && <div style={{textAlign:"right"}}><div style={{fontSize:12,fontFamily:"'JetBrains Mono',monospace",color:T.text}}>{fmt(p.usd,p.usd<1?4:2)}</div></div>}
+                    <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13,color:"#E8E9ED"}}>{coin.name}</div><div style={{fontSize:11,color:"#4A4D65",fontFamily:"'JetBrains Mono',monospace"}}>{coin.symbol}</div></div>
+                    {p && <div style={{textAlign:"right"}}><div style={{fontSize:12,fontFamily:"'JetBrains Mono',monospace",color:"#E8E9ED"}}>{fmt(p.usd,p.usd<1?4:2)}</div></div>}
                   </div>
                 );
               })}
-              <div style={{padding:"8px 12px",fontSize:11,color:"#3b82f6",textTransform:"uppercase",letterSpacing:.5,borderBottom:`1px solid ${T.border}`,background:"#3b82f608"}}>BIST · ABD · TEFAS</div>
+              <div style={{padding:"8px 12px",fontSize:11,color:"#3b82f6",textTransform:"uppercase",letterSpacing:.5,borderBottom:`1px solid #1E2035`,background:"#3b82f608"}}>BIST · ABD · TEFAS</div>
               {Object.values(STOCK_DATA).slice(0,15).map(asset => {
                 const p = prices[asset.id];
                 const mc = getMarketColor(asset.market);
                 return (
                   <div key={asset.id} onClick={() => selectCoin(asset)}
-                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer",borderBottom:"1px solid ${T.bgCardSolid}",transition:"background .15s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background=T.border} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer",borderBottom:`1px solid #151720`,transition:"background .15s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="#1E2035"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                     <div style={{width:28,height:28,borderRadius:7,background:mc+"15",color:mc,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:"'Inter',monospace"}}>{asset.symbol.charAt(0)}</div>
-                    <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:600,fontSize:13,color:T.text}}>{asset.name}</span><span style={{fontSize:8,padding:"1px 5px",borderRadius:3,background:mc+"18",color:mc,fontWeight:700}}>{getMarketLabel(asset.market)}</span></div><div style={{fontSize:11,color:T.textMuted,fontFamily:"'JetBrains Mono',monospace"}}>{asset.symbol}</div></div>
-                    {p && <div style={{textAlign:"right"}}><div style={{fontSize:12,fontFamily:"'JetBrains Mono',monospace",color:T.text}}>{fmt(p.usd,p.usd<1?4:2,asset.currency)}</div></div>}
+                    <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:600,fontSize:13,color:"#E8E9ED"}}>{asset.name}</span><span style={{fontSize:8,padding:"1px 5px",borderRadius:3,background:mc+"18",color:mc,fontWeight:700}}>{getMarketLabel(asset.market)}</span></div><div style={{fontSize:11,color:"#4A4D65",fontFamily:"'JetBrains Mono',monospace"}}>{asset.symbol}</div></div>
+                    {p && <div style={{textAlign:"right"}}><div style={{fontSize:12,fontFamily:"'JetBrains Mono',monospace",color:"#E8E9ED"}}>{fmt(p.usd,p.usd<1?4:2,asset.currency)}</div></div>}
                   </div>
                 );
               })}
@@ -222,21 +222,21 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins, fmpStocks }
 
           {/* Search results */}
           {query.length >= 1 && allResults.length === 0 && !searching && (
-            <div style={{padding:20,textAlign:"center",color:T.textMuted,fontSize:13}}>Sonuç bulunamadı</div>
+            <div style={{padding:20,textAlign:"center",color:"#4A4D65",fontSize:13}}>Sonuç bulunamadı</div>
           )}
           {query.length >= 1 && allResults.map(coin => {
             const mc = getMarketColor(coin.market||"crypto");
             return (
             <div key={coin.id} onClick={() => selectCoin(coin)}
-              style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer",borderBottom:"1px solid ${T.bgCardSolid}",transition:"background .15s"}}
-              onMouseEnter={e=>e.currentTarget.style.background=T.border} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",cursor:"pointer",borderBottom:`1px solid #151720`,transition:"background .15s"}}
+              onMouseEnter={e=>e.currentTarget.style.background="#1E2035"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
               {coin.thumb ? <img src={coin.thumb} alt="" style={{width:28,height:28,borderRadius:7}}/> :
                 <div style={{width:28,height:28,borderRadius:7,background:mc+"22",color:mc,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:"'Inter',monospace"}}>{coin.symbol?.charAt(0)}</div>}
               <div style={{flex:1}}>
-                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:600,fontSize:13,color:T.text}}>{coin.name}</span>{coin.market&&coin.market!=="crypto"&&<span style={{fontSize:8,padding:"1px 5px",borderRadius:3,background:mc+"18",color:mc,fontWeight:700}}>{getMarketLabel(coin.market)}</span>}</div>
-                <div style={{fontSize:11,color:T.textMuted,fontFamily:"'JetBrains Mono',monospace"}}>{coin.symbol}</div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontWeight:600,fontSize:13,color:"#E8E9ED"}}>{coin.name}</span>{coin.market&&coin.market!=="crypto"&&<span style={{fontSize:8,padding:"1px 5px",borderRadius:3,background:mc+"18",color:mc,fontWeight:700}}>{getMarketLabel(coin.market)}</span>}</div>
+                <div style={{fontSize:11,color:"#4A4D65",fontFamily:"'JetBrains Mono',monospace"}}>{coin.symbol}</div>
               </div>
-              {coin.marketCapRank && <span style={{fontSize:11,color:T.textMuted,fontFamily:"'JetBrains Mono',monospace"}}>#{coin.marketCapRank}</span>}
+              {coin.marketCapRank && <span style={{fontSize:11,color:"#4A4D65",fontFamily:"'JetBrains Mono',monospace"}}>#{coin.marketCapRank}</span>}
             </div>
           );})}
         </div>
@@ -247,22 +247,22 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins, fmpStocks }
 
 // ═══ Connection Status Bar ═══
 const ConnBar = ({status,retryCount,lastUpdate,refreshInterval,onRefreshChange,apiMode,onRetry,rateLimitInfo}) => {
-  const c={connected:{color:T.green,bg:"rgba(34,197,94,.07)",bdr:"rgba(34,197,94,.2)",icon:"●",lbl:"Canlı Bağlantı"},connecting:{color:"#EAB308",bg:"#EAB30812",bdr:"#EAB30833",icon:"◌",lbl:"Bağlanıyor..."},retrying:{color:"${T.gold}",bg:"${T.gold}12",bdr:"${T.gold}33",icon:"↻",lbl:`Yeniden Deneme (${retryCount}/${MAX_RETRIES})`},error:{color:T.red,bg:"rgba(239,68,68,.07)",bdr:"rgba(239,68,68,.2)",icon:"✕",lbl:"Bağlantı Hatası"},ratelimited:{color:"${T.gold}",bg:"${T.gold}12",bdr:"${T.gold}33",icon:"⏱",lbl:"Rate Limit"},demo:{color:T.textSecondary,bg:"T.textSecondary12",bdr:"T.textSecondary33",icon:"◇",lbl:"Demo Modu"}}[status]||{color:T.textSecondary,bg:"T.textSecondary12",bdr:"T.textSecondary33",icon:"◇",lbl:"Demo"};
+  const c={connected:{color:"#22C55E",bg:"rgba(34,197,94,.07)",bdr:"rgba(34,197,94,.2)",icon:"●",lbl:"Canlı Bağlantı"},connecting:{color:"#EAB308",bg:"#EAB30812",bdr:"#EAB30833",icon:"◌",lbl:"Bağlanıyor..."},retrying:{color:"#D4A017",bg:"#D4A01712",bdr:"#D4A01733",icon:"↻",lbl:`Yeniden Deneme (${retryCount}/${MAX_RETRIES})`},error:{color:"#EF4444",bg:"rgba(239,68,68,.07)",bdr:"rgba(239,68,68,.2)",icon:"✕",lbl:"Bağlantı Hatası"},ratelimited:{color:"#D4A017",bg:"#D4A01712",bdr:"#D4A01733",icon:"⏱",lbl:"Rate Limit"},demo:{color:"#8B8EA0",bg:"#8B8EA012",bdr:"#8B8EA033",icon:"◇",lbl:"Demo Modu"}}[status]||{color:"#8B8EA0",bg:"#8B8EA012",bdr:"#8B8EA033",icon:"◇",lbl:"Demo"};
   const spinning=status==="connecting"||status==="retrying";
   return (
-    <div style={{padding:"10px 24px",background:T.bg,borderBottom:"1px solid ${T.bgCardSolid}"}}>
+    <div style={{padding:"10px 24px",background:"#0B0D15",borderBottom:`1px solid #151720`}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:28,height:28,borderRadius:8,border:`1px solid ${c.bdr}`,background:c.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{color:c.color,fontSize:spinning?14:10,display:"inline-block",animation:spinning?"spin 1s linear infinite":"none"}}>{c.icon}</span></div>
-          <div><div style={{fontSize:13,fontWeight:600,color:c.color}}>{c.lbl}</div><div style={{fontSize:11,color:T.textMuted}}>{apiMode==="live"?"Binance + CoinGecko":"Çevrimdışı"}{lastUpdate&&` • ${lastUpdate.toLocaleTimeString("tr-TR")}`}</div></div>
+          <div><div style={{fontSize:13,fontWeight:600,color:c.color}}>{c.lbl}</div><div style={{fontSize:11,color:"#4A4D65"}}>{apiMode==="live"?"Binance + CoinGecko":"Çevrimdışı"}{lastUpdate&&` • ${lastUpdate.toLocaleTimeString("tr-TR")}`}</div></div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          {status==="error"&&<button onClick={onRetry} style={{padding:"6px 14px",background:T.bgCardSolid,border:"1px solid ${T.borderLight}",color:"#9333EA",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>↻ Tekrar Dene</button>}
-          <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:T.textMuted,marginRight:4}}>Güncelleme:</span>
-          {REFRESH.map(o=><button key={o.value} onClick={()=>onRefreshChange(o.value)} style={{padding:"4px 10px",background:refreshInterval===o.value?"#9333EA18":"transparent",border:`1px solid ${refreshInterval===o.value?"#9333EA44":T.border}`,color:refreshInterval===o.value?"#9333EA":T.textMuted,borderRadius:4,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>{o.label}</button>)}</div>
+          {status==="error"&&<button onClick={onRetry} style={{padding:"6px 14px",background:"#151720",border:"1px solid #2A2D45",color:"#9333EA",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>↻ Tekrar Dene</button>}
+          <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:11,color:"#4A4D65",marginRight:4}}>Güncelleme:</span>
+          {REFRESH.map(o=><button key={o.value} onClick={()=>onRefreshChange(o.value)} style={{padding:"4px 10px",background:refreshInterval===o.value?"#9333EA18":"transparent",border:`1px solid ${refreshInterval===o.value?"#9333EA44":"#1E2035"}`,color:refreshInterval===o.value?"#9333EA":"#4A4D65",borderRadius:4,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>{o.label}</button>)}</div>
         </div>
       </div>
-      {rateLimitInfo&&<div style={{marginTop:8,padding:"8px 12px",background:"#1a120a",borderRadius:8,border:"1px solid #3d2800"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"${T.gold}",fontSize:11}}>⚠ Rate Limit</span><span style={{color:T.textSecondary,fontSize:11}}>{rateLimitInfo}</span></div></div>}
+      {rateLimitInfo&&<div style={{marginTop:8,padding:"8px 12px",background:"#1a120a",borderRadius:8,border:"1px solid #3d2800"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"#D4A017",fontSize:11}}>⚠ Rate Limit</span><span style={{color:"#8B8EA0",fontSize:11}}>{rateLimitInfo}</span></div></div>}
     </div>
   );
 };
@@ -272,22 +272,22 @@ const Settings = ({show,onClose,apiKey,onKeyChange,onSave,keyStatus}) => {
   if(!show) return null;
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}} onClick={onClose}>
-      <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:"1px solid ${T.borderLight}",borderRadius:16,width:"100%",maxWidth:500,boxShadow:"0 24px 64px rgba(0,0,0,.5)"}} onClick={e=>e.stopPropagation()}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${T.border}`}}><h3 style={{fontSize:16,fontWeight:600,color:T.text}}>⚙ API Ayarları</h3><button style={{background:"none",border:"none",color:T.textMuted,fontSize:18,cursor:"pointer"}} onClick={onClose}>✕</button></div>
+      <div style={{background:"linear-gradient(135deg,#131a27,#12141E)",border:"1px solid #2A2D45",borderRadius:16,width:"100%",maxWidth:500,boxShadow:"0 24px 64px rgba(0,0,0,.5)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid #1E2035`}}><h3 style={{fontSize:16,fontWeight:600,color:"#E8E9ED"}}>⚙ API Ayarları</h3><button style={{background:"none",border:"none",color:"#4A4D65",fontSize:18,cursor:"pointer"}} onClick={onClose}>✕</button></div>
         <div style={{padding:20}}>
           <div style={{marginBottom:24}}>
-            <div style={{fontSize:14,fontWeight:600,color:T.text,marginBottom:6}}>CoinGecko API</div>
-            <div style={{fontSize:12,color:T.textMuted,lineHeight:1.5,marginBottom:12}}>Ücretsiz plan: ~10-30 req/dk. Pro plan ile daha yüksek limitler.</div>
+            <div style={{fontSize:14,fontWeight:600,color:"#E8E9ED",marginBottom:6}}>CoinGecko API</div>
+            <div style={{fontSize:12,color:"#4A4D65",lineHeight:1.5,marginBottom:12}}>Ücretsiz plan: ~10-30 req/dk. Pro plan ile daha yüksek limitler.</div>
             <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
-              <div style={{flex:1}}><label style={{display:"block",fontSize:11,color:T.textSecondary,marginBottom:6,fontWeight:500,textTransform:"uppercase",letterSpacing:.5}}>API Key (Opsiyonel)</label><input style={{width:"100%",padding:"10px 12px",background:T.bgInput,border:"1px solid ${T.borderLight}",borderRadius:8,color:T.text,fontSize:14,outline:"none",fontFamily:"'JetBrains Mono',monospace"}} type="password" placeholder="CG-xxxxxxxxxxxx" value={apiKey} onChange={e=>onKeyChange(e.target.value)}/></div>
+              <div style={{flex:1}}><label style={{display:"block",fontSize:11,color:"#8B8EA0",marginBottom:6,fontWeight:500,textTransform:"uppercase",letterSpacing:.5}}>API Key (Opsiyonel)</label><input style={{width:"100%",padding:"10px 12px",background:"#0E1018",border:"1px solid #2A2D45",borderRadius:8,color:"#E8E9ED",fontSize:14,outline:"none",fontFamily:"'JetBrains Mono',monospace"}} type="password" placeholder="CG-xxxxxxxxxxxx" value={apiKey} onChange={e=>onKeyChange(e.target.value)}/></div>
               <button style={{padding:"10px 16px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}} onClick={onSave}>Kaydet</button>
             </div>
-            {keyStatus&&<div style={{marginTop:8,fontSize:12,fontWeight:500,color:keyStatus.type==="success"?T.green:"#EAB308"}}>{keyStatus.type==="success"?"✓":"⏳"} {keyStatus.message}</div>}
+            {keyStatus&&<div style={{marginTop:8,fontSize:12,fontWeight:500,color:keyStatus.type==="success"?"#22C55E":"#EAB308"}}>{keyStatus.type==="success"?"✓":"⏳"} {keyStatus.message}</div>}
           </div>
           <div>
-            <div style={{fontSize:14,fontWeight:600,color:T.text,marginBottom:10}}>Rate Limit Bilgisi</div>
+            <div style={{fontSize:14,fontWeight:600,color:"#E8E9ED",marginBottom:10}}>Rate Limit Bilgisi</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-              {[["Ücretsiz","10-30/dk"],["Demo Key","30/dk"],["Pro","500/dk"]].map(([l,v])=><div key={l} style={{background:T.bgInput,borderRadius:8,padding:12,border:`1px solid ${T.border}`,textAlign:"center"}}><div style={{fontSize:10,color:T.textMuted,textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:14,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:T.text}}>{v}</div></div>)}
+              {[["Ücretsiz","10-30/dk"],["Demo Key","30/dk"],["Pro","500/dk"]].map(([l,v])=><div key={l} style={{background:"#0E1018",borderRadius:8,padding:12,border:`1px solid #1E2035`,textAlign:"center"}}><div style={{fontSize:10,color:"#4A4D65",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:14,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:"#E8E9ED"}}>{v}</div></div>)}
             </div>
           </div>
         </div>
@@ -473,13 +473,13 @@ const AuthScreen = ({ onLogin }) => {
 
           {/* LOGIN */}
           {mode==="login"&&<>
-            <h2 style={{fontSize:24,fontWeight:700,color:T.text,marginBottom:4}}>Hoş Geldiniz</h2>
-            <p style={{fontSize:13,color:T.textMuted,marginBottom:28}}>Hesabınıza giriş yapın</p>
+            <h2 style={{fontSize:24,fontWeight:700,color:"#E8E9ED",marginBottom:4}}>Hoş Geldiniz</h2>
+            <p style={{fontSize:13,color:"#4A4D65",marginBottom:28}}>Hesabınıza giriş yapın</p>
             {Inp("👤",username,setUsername,"Kullanıcı adı","text",handleLogin)}
             {Inp("🔒",password,setPassword,"Şifre","password",handleLogin)}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-              <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:T.textMuted}}>
-                <div onClick={()=>setRememberMe(!rememberMe)} style={{width:18,height:18,borderRadius:4,border:`1px solid ${rememberMe?"#9333EA":T.borderLight}`,background:rememberMe?"#9333EA22":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all .2s"}}>
+              <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,color:"#4A4D65"}}>
+                <div onClick={()=>setRememberMe(!rememberMe)} style={{width:18,height:18,borderRadius:4,border:`1px solid ${rememberMe?"#9333EA":"#2A2D45"}`,background:rememberMe?"#9333EA22":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all .2s"}}>
                   {rememberMe&&<span style={{color:"#9333EA",fontSize:12}}>✓</span>}
                 </div>
                 Beni hatırla
@@ -490,8 +490,8 @@ const AuthScreen = ({ onLogin }) => {
 
           {/* REGISTER */}
           {mode==="register"&&<>
-            <h2 style={{fontSize:24,fontWeight:700,color:T.text,marginBottom:4}}>Hesap Oluştur</h2>
-            <p style={{fontSize:13,color:T.textMuted,marginBottom:28}}>Ücretsiz hesabınızı oluşturun</p>
+            <h2 style={{fontSize:24,fontWeight:700,color:"#E8E9ED",marginBottom:4}}>Hesap Oluştur</h2>
+            <p style={{fontSize:13,color:"#4A4D65",marginBottom:28}}>Ücretsiz hesabınızı oluşturun</p>
             {Inp("👤",username,setUsername,"Kullanıcı adı (min. 3 karakter)")}
             {Inp("✉",email,setEmail,"E-posta adresi","email")}
             {Inp("🔒",password,setPassword,"Şifre (min. 6 karakter)","password")}
@@ -500,15 +500,15 @@ const AuthScreen = ({ onLogin }) => {
 
           {/* FORGOT */}
           {mode==="forgot"&&<>
-            <h2 style={{fontSize:24,fontWeight:700,color:T.text,marginBottom:4}}>Şifre Kurtarma</h2>
-            <p style={{fontSize:13,color:T.textMuted,marginBottom:28}}>Kayıtlı e-posta adresinizi girin</p>
+            <h2 style={{fontSize:24,fontWeight:700,color:"#E8E9ED",marginBottom:4}}>Şifre Kurtarma</h2>
+            <p style={{fontSize:13,color:"#4A4D65",marginBottom:28}}>Kayıtlı e-posta adresinizi girin</p>
             {Inp("✉",email,setEmail,"E-posta adresi","email",handleForgot)}
             <span onClick={()=>{setMode("login");setError("");}} style={{fontSize:12,color:"#9333EA",cursor:"pointer"}}>← Giriş'e dön</span>
             <div style={{height:16}}/>
           </>}
 
-          {error && <div style={{padding:"10px 14px",background:"rgba(239,68,68,.07)",border:"1px solid rgba(239,68,68,.2)",borderRadius:8,color:T.red,fontSize:13,marginBottom:16,display:"flex",alignItems:"center",gap:8}}><span>⚠</span>{error}</div>}
-          {success && <div style={{padding:"10px 14px",background:"rgba(34,197,94,.07)",border:"1px solid rgba(34,197,94,.2)",borderRadius:8,color:T.green,fontSize:13,marginBottom:16,display:"flex",alignItems:"center",gap:8}}><span>✓</span>{success}</div>}
+          {error && <div style={{padding:"10px 14px",background:"rgba(239,68,68,.07)",border:"1px solid rgba(239,68,68,.2)",borderRadius:8,color:"#EF4444",fontSize:13,marginBottom:16,display:"flex",alignItems:"center",gap:8}}><span>⚠</span>{error}</div>}
+          {success && <div style={{padding:"10px 14px",background:"rgba(34,197,94,.07)",border:"1px solid rgba(34,197,94,.2)",borderRadius:8,color:"#22C55E",fontSize:13,marginBottom:16,display:"flex",alignItems:"center",gap:8}}><span>✓</span>{success}</div>}
 
           <button onClick={mode==="login"?handleLogin:mode==="register"?handleRegister:handleForgot} disabled={loading}
             style={{width:"100%",padding:"14px",background:loading?"#6b4a0a":"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:600,cursor:loading?"wait":"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s",boxShadow:"0 4px 24px rgba(247,147,26,.25)",opacity:loading?.7:1}}>
@@ -516,7 +516,7 @@ const AuthScreen = ({ onLogin }) => {
           </button>
 
           {/* Registered users count */}
-          {mode==="register"&&<div style={{textAlign:"center",marginTop:20,fontSize:12,color:T.borderLight}}>
+          {mode==="register"&&<div style={{textAlign:"center",marginTop:20,fontSize:12,color:"#2A2D45"}}>
             {Object.keys(getUsers()).length > 0 && `${Object.keys(getUsers()).length} kayıtlı kullanıcı`}
           </div>}
         </div>
@@ -1207,59 +1207,83 @@ export default function CryptoPortfolio() {
     try {
       const doc = new jsPDF("p", "mm", "a4");
       const w = doc.internal.pageSize.getWidth();
+      const h = doc.internal.pageSize.getHeight();
       const now = new Date();
-      const dateStr = now.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+      
+      // Turkce ASCII uyumlu ay isimleri
+      const aylar = ["Ocak","Subat","Mart","Nisan","Mayis","Haziran","Temmuz","Agustos","Eylul","Ekim","Kasim","Aralik"];
+      const ay = aylar[now.getMonth()];
+      const dateStr = now.getDate() + " " + ay + " " + now.getFullYear();
       const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-      const monthName = now.toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
 
-      // === SAYFA 1: Kapak + Özet ===
+      // Para formati — tam sayilar virgullu (1,234.56 yerine 1.234,56)
+      const fmtTR = (v, cur="$") => {
+        const abs = Math.abs(v);
+        const parts = abs.toFixed(2).split(".");
+        const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        const result = intPart + "," + parts[1];
+        return (cur === "$" ? "$" : "") + result + (cur === "TL" ? " TL" : "");
+      };
+      const fmtPct = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
+
+      // === SAYFA 1: Kapak ===
+      // Koyu header
       doc.setFillColor(11, 13, 21);
-      doc.rect(0, 0, w, 45, "F");
-      // Gradient line
+      doc.rect(0, 0, w, 50, "F");
+      // Gradient cizgi
       doc.setFillColor(147, 51, 234);
-      doc.rect(0, 43, w/2, 2, "F");
+      doc.rect(0, 48, w * 0.5, 2, "F");
       doc.setFillColor(212, 160, 23);
-      doc.rect(w/2, 43, w/2, 2, "F");
+      doc.rect(w * 0.5, 48, w * 0.5, 2, "F");
 
+      // Logo ve baslik
       doc.setTextColor(147, 51, 234);
-      doc.setFontSize(28);
-      doc.text("InvestPulse", 20, 22);
+      doc.setFontSize(30);
+      doc.text("InvestPulse", 20, 24);
       doc.setFontSize(9);
       doc.setTextColor(130, 140, 160);
-      doc.text("PORTFOY YONETIM SISTEMI", 20, 30);
-      doc.text(dateStr + " - " + timeStr, 20, 38);
+      doc.text("PORTFOY YONETIM SISTEMI", 20, 33);
+      doc.text(dateStr + " - " + timeStr, 20, 42);
 
       doc.setFontSize(10);
       doc.setTextColor(180, 180, 180);
-      doc.text("Kullanici: " + currentUser, w - 20, 30, { align: "right" });
-      doc.text("Aktif Portfoy: " + activePortfolio, w - 20, 38, { align: "right" });
+      doc.text("Kullanici: " + currentUser, w - 20, 33, { align: "right" });
+      doc.text("Aktif Portfoy: " + activePortfolio, w - 20, 42, { align: "right" });
 
+      // Rapor basligi
       doc.setFontSize(18);
       doc.setTextColor(40, 40, 60);
-      doc.text("Aylik Portfoy Raporu - " + monthName, 20, 60);
+      doc.text("Aylik Portfoy Raporu - " + ay + " " + now.getFullYear(), 20, 66);
 
-      // Özet kartlar
-      let y = 72;
-      const fmtR = (v) => v >= 1e6 ? "$" + (v/1e6).toFixed(2) + "M" : v >= 1e3 ? "$" + (v/1e3).toFixed(1) + "K" : "$" + v.toFixed(2);
+      // Ozet kartlar - genisletilmis
+      let y = 78;
+      const cardW = (w - 50) / 3;
 
-      const drawBox = (x, label, value, color) => {
+      const drawCard = (x, label, value, subText, color) => {
         doc.setFillColor(245, 247, 250);
-        doc.roundedRect(x, y, 52, 28, 3, 3, "F");
+        doc.roundedRect(x, y, cardW, 34, 3, 3, "F");
+        doc.setDrawColor(230, 232, 240);
+        doc.roundedRect(x, y, cardW, 34, 3, 3, "S");
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 140);
-        doc.text(label, x + 5, y + 10);
-        doc.setFontSize(14);
+        doc.text(label, x + 6, y + 10);
+        doc.setFontSize(16);
         doc.setTextColor(color[0], color[1], color[2]);
-        doc.text(value, x + 5, y + 22);
+        doc.text(value, x + 6, y + 22);
+        if (subText) {
+          doc.setFontSize(8);
+          doc.text(subText, x + 6, y + 30);
+        }
       };
 
-      drawBox(15, "Toplam Deger", fmtR(allTotVal), [30, 30, 50]);
-      drawBox(72, "Toplam Yatirim", fmtR(allTotInv), [60, 60, 80]);
-      drawBox(129, "Kar / Zarar", (allTotPnl >= 0 ? "+" : "") + fmtR(Math.abs(allTotPnl)), allTotPnl >= 0 ? [0, 180, 80] : [220, 60, 60]);
+      drawCard(15, "Toplam Deger", fmtTR(allTotVal), "Tum portfoyler", [30, 30, 50]);
+      drawCard(15 + cardW + 5, "Toplam Yatirim", fmtTR(allTotInv), allPData.length + " varlik", [60, 60, 80]);
+      const pnlColor = allTotPnl >= 0 ? [0, 160, 70] : [200, 50, 50];
+      drawCard(15 + (cardW + 5) * 2, "Kar / Zarar", (allTotPnl >= 0 ? "+" : "") + fmtTR(Math.abs(allTotPnl)), fmtPct(allTotPnlPct), pnlColor);
 
-      y += 34;
+      y += 42;
 
-      // Piyasa Dağılımı
+      // Piyasa Dagilimi
       doc.setFontSize(12);
       doc.setTextColor(40, 40, 60);
       doc.text("Piyasa Dagilimi", 20, y);
@@ -1267,52 +1291,92 @@ export default function CryptoPortfolio() {
 
       const mktTotals = {};
       allPData.forEach(item => { const m = getMarketType(item.coinId); mktTotals[m] = (mktTotals[m] || 0) + item.currentValue; });
-      const mktColors = { crypto: [247, 147, 26], bist: [59, 130, 246], us: [139, 92, 246], tefas: [6, 182, 212] };
+      const mktColors = { crypto: [147, 51, 234], bist: [59, 130, 246], us: [212, 160, 23], tefas: [6, 182, 212] };
       const mktLabels2 = { crypto: "Kripto", bist: "BIST", us: "ABD", tefas: "TEFAS" };
+      
+      // Bar grafik
       let barX = 20;
       const barW = w - 40;
       Object.entries(mktTotals).forEach(([m, val]) => {
         const pct = allTotVal > 0 ? val / allTotVal : 0;
         const segW = barW * pct;
         doc.setFillColor(mktColors[m]?.[0]||140, mktColors[m]?.[1]||140, mktColors[m]?.[2]||160);
-        doc.rect(barX, y, Math.max(segW, 1), 6, "F");
-        if (segW > 20) {
+        doc.roundedRect(barX, y, Math.max(segW, 1), 8, 1, 1, "F");
+        if (segW > 25) {
           doc.setFontSize(7);
           doc.setTextColor(255, 255, 255);
-          doc.text((mktLabels2[m] || m) + " " + (pct * 100).toFixed(1) + "%", barX + 2, y + 4.5);
+          doc.text((mktLabels2[m] || m) + " " + (pct * 100).toFixed(1) + "%", barX + 3, y + 5.5);
         }
         barX += segW;
       });
       y += 14;
 
-      // Portföy bazlı özet
+      // Piyasa detay tablosu
+      const mktData = Object.entries(mktTotals).map(([m, val]) => {
+        const pct = allTotVal > 0 ? (val / allTotVal * 100) : 0;
+        const count = allPData.filter(item => getMarketType(item.coinId) === m).length;
+        return [mktLabels2[m] || m, fmtTR(val), pct.toFixed(1) + "%", String(count) + " varlik"];
+      });
+      
+      if (mktData.length > 1) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Piyasa", "Deger", "Oran", "Varlik Sayisi"]],
+          body: mktData,
+          theme: "grid",
+          headStyles: { fillColor: [147, 51, 234], textColor: [255, 255, 255], fontSize: 8, fontStyle: "bold" },
+          bodyStyles: { fontSize: 8, textColor: [60, 60, 80] },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          margin: { left: 20, right: 20 },
+          tableWidth: w - 40,
+        });
+        y = doc.lastAutoTable.finalY + 10;
+      } else {
+        y += 2;
+      }
+
+      // Portfolyo bazli ozet
       if (Object.keys(portfolios).length > 1) {
         doc.setFontSize(12);
         doc.setTextColor(40, 40, 60);
-        doc.text("Portfolyolar", 20, y);
+        doc.text("Portfolyo Ozeti", 20, y);
         y += 4;
 
-        const pSumData = portfolioSummaries.map(p => [
-          p.name, fmtR(p.value), fmtR(p.invested),
-          (p.pnl >= 0 ? "+" : "") + fmtR(Math.abs(p.pnl)),
-          (p.pnlPct >= 0 ? "+" : "") + p.pnlPct.toFixed(2) + "%",
-          String(p.count),
-        ]);
+        const pSumData = portfolioSummaries.map(p => {
+          const pctOfTotal = allTotVal > 0 ? (p.value / allTotVal * 100) : 0;
+          return [
+            p.name,
+            fmtTR(p.value),
+            fmtTR(p.invested),
+            (p.pnl >= 0 ? "+" : "") + fmtTR(Math.abs(p.pnl)),
+            fmtPct(p.pnlPct),
+            pctOfTotal.toFixed(1) + "%",
+            String(p.count),
+          ];
+        });
 
         autoTable(doc, {
           startY: y,
-          head: [["Portfoy", "Deger", "Yatirim", "K/Z", "K/Z %", "Varlik"]],
+          head: [["Portfolyo", "Deger", "Yatirim", "K/Z", "K/Z %", "Agirlik", "Varlik"]],
           body: pSumData,
           theme: "grid",
           headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 8, fontStyle: "bold" },
           bodyStyles: { fontSize: 8, textColor: [60, 60, 80] },
           alternateRowStyles: { fillColor: [248, 250, 252] },
-          margin: { left: 20, right: 20 },
+          margin: { left: 15, right: 15 },
+          didParseCell: (data) => {
+            if (data.section === "body" && (data.column.index === 3 || data.column.index === 4)) {
+              const val = data.cell.raw || "";
+              if (val.startsWith("+")) data.cell.styles.textColor = [0, 160, 70];
+              else if (val.startsWith("-")) data.cell.styles.textColor = [200, 50, 50];
+            }
+          },
         });
         y = doc.lastAutoTable.finalY + 10;
       }
 
-      // Tüm varlıklar tablosu
+      // Tum varliklar tablosu
+      if (y > h - 40) { doc.addPage(); y = 20; }
       doc.setFontSize(12);
       doc.setTextColor(40, 40, 60);
       doc.text("Tum Varliklar", 20, y);
@@ -1320,28 +1384,29 @@ export default function CryptoPortfolio() {
 
       const tableData = allPData.map(item => {
         const mkt = getMarketType(item.coinId);
-        const cur = ALL_ASSETS[item.coinId]?.currency || "$";
-        const fV = (v) => cur === "₺" ? v.toFixed(2) + " TL" : fmtR(v);
+        const cur = ALL_ASSETS[item.coinId]?.currency === "₺" ? "TL" : "$";
+        const pctOfTotal = allTotVal > 0 ? (item.currentValue / allTotVal * 100) : 0;
         return [
           (item.coin?.symbol || "?") + " [" + getMarketLabel(mkt) + "]",
           item.totalAmount.toFixed(item.totalAmount < 1 ? 6 : 2),
-          fV(item.currentPrice),
-          fV(item.currentValue),
-          fV(item.totalInvested),
-          (item.pnl >= 0 ? "+" : "-") + fV(Math.abs(item.pnl)),
-          (item.pnlPct >= 0 ? "+" : "") + item.pnlPct.toFixed(2) + "%",
+          fmtTR(item.currentPrice, cur),
+          fmtTR(item.currentValue, cur),
+          fmtTR(item.totalInvested, cur),
+          (item.pnl >= 0 ? "+" : "-") + fmtTR(Math.abs(item.pnl), cur),
+          fmtPct(item.pnlPct),
+          pctOfTotal.toFixed(1) + "%",
         ];
       });
 
       autoTable(doc, {
         startY: y,
-        head: [["Varlik", "Miktar", "Fiyat", "Deger", "Yatirim", "K/Z", "K/Z %"]],
+        head: [["Varlik", "Miktar", "Fiyat", "Deger", "Maliyet", "K/Z", "K/Z %", "Agirlik"]],
         body: tableData,
         theme: "grid",
         headStyles: { fillColor: [20, 28, 42], textColor: [200, 200, 220], fontSize: 7, fontStyle: "bold" },
         bodyStyles: { fontSize: 7, textColor: [60, 60, 80] },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        margin: { left: 15, right: 15 },
+        margin: { left: 12, right: 12 },
         didParseCell: (data) => {
           if (data.section === "body" && (data.column.index === 5 || data.column.index === 6)) {
             const val = data.cell.raw || "";
@@ -1351,24 +1416,29 @@ export default function CryptoPortfolio() {
         },
       });
 
-      // Footer
+      // Footer — her sayfaya
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
+        // Alt cizgi
+        doc.setDrawColor(147, 51, 234);
+        doc.setLineWidth(0.3);
+        doc.line(20, h - 14, w - 20, h - 14);
+        // Footer text
         doc.setFontSize(7);
-        doc.setTextColor(160, 160, 180);
-        doc.text("InvestPulse Portfoy Raporu - " + dateStr + " - Sayfa " + i + "/" + pageCount, w / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
+        doc.setTextColor(140, 140, 160);
+        doc.text("InvestPulse Portfoy Raporu", 20, h - 9);
+        doc.text(dateStr, w / 2, h - 9, { align: "center" });
+        doc.text("Sayfa " + i + " / " + pageCount, w - 20, h - 9, { align: "right" });
       }
 
-      // Preview olarak göster
+      // Preview
       const pdfUrl = doc.output("bloburl");
       setPdfPreviewUrl(pdfUrl);
 
-      // İşaretle
       localStorage.setItem("ip_report_" + now.getFullYear() + "_" + now.getMonth(), "1");
       setShowReportNotif(false);
 
-      // Rapor geçmişi
       try {
         const hist = JSON.parse(localStorage.getItem("ip_report_history") || "[]");
         const entry = { date: now.toISOString(), totVal: allTotVal, totInv: allTotInv, pnl: allTotPnl, pnlPct: allTotPnlPct, assets: allPData.length, user: currentUser };
@@ -1460,23 +1530,23 @@ export default function CryptoPortfolio() {
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>setShowPortfolioMenu(!showPortfolioMenu)}
-                style={{padding:"8px 12px",background:T.bgCardSolid,border:"1px solid ${T.borderLight}",color:T.textSecondary,borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"'Inter',sans-serif"}}>+ Yeni Portföy</button>
+                style={{padding:"8px 12px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,color:T.textSecondary,borderRadius:8,cursor:"pointer",fontSize:13,fontFamily:"'Inter',sans-serif"}}>+ Yeni Portföy</button>
               {Object.keys(portfolios).length>1&&<button onClick={()=>{
                 if(window.confirm(`"${activePortfolio}" portföyünü silmek istediğinize emin misiniz?`)){
                   setPortfolios(prev=>{const next={...prev};delete next[activePortfolio];return next;});
                   setActivePortfolio(Object.keys(portfolios).find(k=>k!==activePortfolio)||"Ana Portföy");
                 }
-              }} style={{padding:"8px 12px",background:"${T.redGlow}",border:"1px solid ${T.red}33",color:T.red,borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"'Inter',sans-serif"}}>🗑</button>}
+              }} style={{padding:"8px 12px",background:T.redGlow,border:`1px solid ${T.red}33`,color:T.red,borderRadius:8,cursor:"pointer",fontSize:12,fontFamily:"'Inter',sans-serif"}}>🗑</button>}
             </div>
 
             {/* New Portfolio Input */}
-            {showPortfolioMenu&&<div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:10,padding:12,zIndex:50,boxShadow:"0 12px 40px rgba(0,0,0,.5)",width:260}}>
+            {showPortfolioMenu&&<div style={{position:"absolute",top:"100%",right:0,marginTop:4,background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:10,padding:12,zIndex:50,boxShadow:"0 12px 40px rgba(0,0,0,.5)",width:260}}>
               <div style={{fontSize:12,color:T.textSecondary,marginBottom:8}}>Yeni portföy adı:</div>
               <div style={{display:"flex",gap:8}}>
                 <input autoFocus value={newPortfolioName} onChange={e=>setNewPortfolioName(e.target.value)}
                   onKeyDown={e=>{if(e.key==="Enter"&&newPortfolioName.trim()){setPortfolios(prev=>({...prev,[newPortfolioName.trim()]:[]}));setActivePortfolio(newPortfolioName.trim());setNewPortfolioName("");setShowPortfolioMenu(false);}}}
                   placeholder="örn: Uzun Vade"
-                  style={{flex:1,padding:"8px 10px",background:T.bg,border:"1px solid ${T.borderLight}",borderRadius:6,color:T.text,fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                  style={{flex:1,padding:"8px 10px",background:T.bg,border:`1px solid ${T.borderLight}`,borderRadius:6,color:T.text,fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
                 <button onClick={()=>{if(newPortfolioName.trim()){setPortfolios(prev=>({...prev,[newPortfolioName.trim()]:[]}));setActivePortfolio(newPortfolioName.trim());setNewPortfolioName("");setShowPortfolioMenu(false);}}}
                   style={{padding:"8px 14px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:6,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Ekle</button>
               </div>
@@ -1484,15 +1554,15 @@ export default function CryptoPortfolio() {
 
             {/* Rename Modal */}
             {renameTarget&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={()=>setRenameTarget(null)}>
-              <div style={{background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:12,padding:20,width:300}} onClick={e=>e.stopPropagation()}>
+              <div style={{background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:12,padding:20,width:300}} onClick={e=>e.stopPropagation()}>
                 <div style={{fontSize:14,fontWeight:600,color:T.text,marginBottom:12}}>Portföyü Yeniden Adlandır</div>
                 <input autoFocus value={renameValue} onChange={e=>setRenameValue(e.target.value)}
                   onKeyDown={e=>{if(e.key==="Enter"&&renameValue.trim()&&renameValue!==renameTarget){
                     setPortfolios(prev=>{const next={};Object.entries(prev).forEach(([k,v])=>{next[k===renameTarget?renameValue.trim():k]=v;});return next;});
                     if(activePortfolio===renameTarget)setActivePortfolio(renameValue.trim());setRenameTarget(null);}}}
-                  style={{width:"100%",padding:"10px 12px",background:T.bg,border:"1px solid ${T.borderLight}",borderRadius:8,color:T.text,fontSize:14,outline:"none",marginBottom:12,fontFamily:"'Inter',sans-serif"}}/>
+                  style={{width:"100%",padding:"10px 12px",background:T.bg,border:`1px solid ${T.borderLight}`,borderRadius:8,color:T.text,fontSize:14,outline:"none",marginBottom:12,fontFamily:"'Inter',sans-serif"}}/>
                 <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-                  <button onClick={()=>setRenameTarget(null)} style={{padding:"8px 16px",background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:6,color:T.textSecondary,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>İptal</button>
+                  <button onClick={()=>setRenameTarget(null)} style={{padding:"8px 16px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:6,color:T.textSecondary,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>İptal</button>
                   <button onClick={()=>{if(renameValue.trim()&&renameValue!==renameTarget){setPortfolios(prev=>{const next={};Object.entries(prev).forEach(([k,v])=>{next[k===renameTarget?renameValue.trim():k]=v;});return next;});if(activePortfolio===renameTarget)setActivePortfolio(renameValue.trim());setRenameTarget(null);}}}
                     style={{padding:"8px 16px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:6,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Kaydet</button>
                 </div>
@@ -1560,21 +1630,21 @@ export default function CryptoPortfolio() {
                                   <button onClick={()=>{const nv=editSectionValue.trim();if(nv){setSections(p=>p.map(s=>s===secName?nv:s));setPortfolio(p=>p.map(it=>it.section===secName?{...it,section:nv}:it));}setEditSectionName(null);}}
                                     style={{padding:"3px 8px",background:"#9333EA22",border:"1px solid #9333EA44",borderRadius:4,color:"#9333EA",fontSize:11,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>✓</button>
                                   <button onClick={()=>setEditSectionName(null)}
-                                    style={{padding:"3px 8px",background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:4,color:T.textMuted,fontSize:11,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>✕</button>
+                                    style={{padding:"3px 8px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:4,color:T.textMuted,fontSize:11,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>✕</button>
                                 </div>
                               ):(
                                 <>
                                   <span style={{fontSize:14,fontWeight:700,color:T.text,letterSpacing:.3}}>{secName}</span>
                                   <span style={{fontSize:11,color:T.textMuted,background:T.bgCardSolid,padding:"2px 8px",borderRadius:4}}>{items.length} coin</span>
                                   <button onClick={()=>{setEditSectionName(secName);setEditSectionValue(secName);}}
-                                    style={{width:22,height:22,border:"1px solid ${T.borderLight}",background:T.bgCardSolid,color:T.textMuted,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}} title="Yeniden adlandır">✎</button>
+                                    style={{width:22,height:22,border:`1px solid ${T.borderLight}`,background:T.bgCardSolid,color:T.textMuted,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}} title="Yeniden adlandır">✎</button>
                                   {sections.length>1&&<button onClick={()=>{
                                     const fallback=sections.find(s=>s!==secName)||"Kategorisiz";
                                     if(window.confirm(`"${secName}" kategorisini silmek istediğinize emin misiniz? İçindeki coinler "${fallback}" kategorisine taşınacak.`)){
                                       setPortfolio(p=>p.map(it=>it.section===secName?{...it,section:fallback}:it));
                                       setSections(p=>p.filter(s=>s!==secName));
                                     }
-                                  }} style={{width:22,height:22,border:"1px solid ${T.red}33",background:"${T.redGlow}",color:T.red,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}} title="Kategoriyi sil">✕</button>}
+                                  }} style={{width:22,height:22,border:`1px solid ${T.red}33`,background:T.redGlow,color:T.red,borderRadius:4,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}} title="Kategoriyi sil">✕</button>}
                                 </>
                               )}
                               {isDropTarget&&<span style={{fontSize:11,color:"#9333EA",animation:"pulse 1s infinite"}}>← Buraya bırak</span>}
@@ -1606,7 +1676,7 @@ export default function CryptoPortfolio() {
                         <td style={{...st.td,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontWeight:600}}>{fmt(item.currentValue)}</td>
                         <td style={{...st.td,textAlign:"right"}}><div style={{display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end"}}><div style={{width:50,height:5,background:T.border,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:CLR[i%CLR.length],borderRadius:3}}/></div><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"#9333EA",fontWeight:600,minWidth:40,textAlign:"right"}}>{pct.toFixed(1)}%</span></div></td>
                         <td style={{...st.td,textAlign:"right"}}><div style={{color:item.pnl>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace",fontWeight:600}}>{item.pnl>=0?"+":""}{fmt(item.pnl)}</div><div style={{color:item.pnl>=0?"#00ff88aa":"#ff4466aa",fontSize:11}}>{fPct(item.pnlPct)}</div></td>
-                        <td style={{...st.td,textAlign:"center"}}><div style={{display:"flex",gap:6,justifyContent:"center"}}><button onClick={()=>{const it=portfolio[i];const c=knownCoins.find(x=>x.id===it.coinId);setNcCoin(c||{id:it.coinId,symbol:"?",name:it.coinId});setNcAmount(""+it.amount);setNcBuyPrice(""+it.buyPrice);setNcSection(it.section||"Genel");setEditIdx(i);setShowAdd(true);}} style={{width:28,height:28,border:"1px solid ${T.borderLight}",background:T.bgCardSolid,color:T.textSecondary,borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✎</button><button onClick={()=>setDelConfirm(i)} style={{width:28,height:28,border:"1px solid ${T.red}33",background:"${T.redGlow}",color:T.red,borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div></td></tr>
+                        <td style={{...st.td,textAlign:"center"}}><div style={{display:"flex",gap:6,justifyContent:"center"}}><button onClick={()=>{const it=portfolio[i];const c=knownCoins.find(x=>x.id===it.coinId);setNcCoin(c||{id:it.coinId,symbol:"?",name:it.coinId});setNcAmount(""+it.amount);setNcBuyPrice(""+it.buyPrice);setNcSection(it.section||"Genel");setEditIdx(i);setShowAdd(true);}} style={{width:28,height:28,border:`1px solid ${T.borderLight}`,background:T.bgCardSolid,color:T.textSecondary,borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✎</button><button onClick={()=>setDelConfirm(i)} style={{width:28,height:28,border:`1px solid ${T.red}33`,background:T.redGlow,color:T.red,borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div></td></tr>
                       );
                     });
                   });
@@ -1741,7 +1811,7 @@ export default function CryptoPortfolio() {
                 <button onClick={()=>setShowPerp(true)} style={{padding:"5px 12px",borderRadius:5,border:"none",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",background:showPerp?"#9945FF22":"transparent",color:showPerp?"#9945FF":T.textMuted}}>Perpetual</button>
               </div>}
             </div>
-            <input style={{padding:"8px 14px",background:T.bgInput,border:"1px solid ${T.borderLight}",borderRadius:8,color:T.text,fontSize:13,outline:"none",width:180,fontFamily:"'Inter',sans-serif"}} placeholder="Ara..." value={search} onChange={e=>setSearch(e.target.value)}/>
+            <input style={{padding:"8px 14px",background:T.bgInput,border:`1px solid ${T.borderLight}`,borderRadius:8,color:T.text,fontSize:13,outline:"none",width:180,fontFamily:"'Inter',sans-serif"}} placeholder="Ara..." value={search} onChange={e=>setSearch(e.target.value)}/>
           </div>
           <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>
             {showPerp
@@ -1764,7 +1834,7 @@ export default function CryptoPortfolio() {
                 <td style={{...st.td,textAlign:"right",color:pc>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>{fPct(pc)}</td>
                 <td style={{...st.td,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontWeight:600,color:frColor}}>{(fr*100).toFixed(4)}%</td>
                 <td style={{...st.td,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>{fmt(p?.perp_volume)}</td>
-                <td style={{...st.td,textAlign:"center"}}><button onClick={()=>{setNcCoin(coin);setNcAmount("");setNcBuyPrice(perpPrice?(perpPrice<1?perpPrice.toFixed(6):perpPrice.toFixed(2)):"");setEditIdx(null);setShowAdd(true);}} style={{padding:"5px 10px",background:"transparent",border:"1px solid ${T.borderLight}",color:"#9333EA",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:500,fontFamily:"'Inter',sans-serif"}}>+ Ekle</button></td></tr>);
+                <td style={{...st.td,textAlign:"center"}}><button onClick={()=>{setNcCoin(coin);setNcAmount("");setNcBuyPrice(perpPrice?(perpPrice<1?perpPrice.toFixed(6):perpPrice.toFixed(2)):"");setEditIdx(null);setShowAdd(true);}} style={{padding:"5px 10px",background:"transparent",border:`1px solid ${T.borderLight}`,color:"#9333EA",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:500,fontFamily:"'Inter',sans-serif"}}>+ Ekle</button></td></tr>);
             }
             return(
             <tr key={coin.id}><td style={{...st.td,color:T.textSecondary,width:40}}>{i+1}</td>
@@ -1774,14 +1844,14 @@ export default function CryptoPortfolio() {
             <td style={{...st.td,textAlign:"right",color:c7>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>{fPct(c7)}</td>
             <td style={{...st.td,textAlign:"right",fontFamily:"'JetBrains Mono',monospace"}}>{coin.market==="crypto"?fmt(p?.usd_market_cap):coin.sector||"—"}</td>
             <td style={{...st.td,textAlign:"center"}}><Spark data={genChart(p?.usd||100,14)} color={c7>=0?T.green:T.red}/></td>
-            <td style={{...st.td,textAlign:"center"}}><button onClick={()=>{setNcCoin(coin);setNcAmount("");setNcBuyPrice(p?.usd?(p.usd<1?p.usd.toFixed(6):p.usd.toFixed(2)):"");setEditIdx(null);setShowAdd(true);}} style={{padding:"5px 10px",background:"transparent",border:"1px solid ${T.borderLight}",color:"#9333EA",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:500,fontFamily:"'Inter',sans-serif"}}>+ Ekle</button></td></tr>);})}
+            <td style={{...st.td,textAlign:"center"}}><button onClick={()=>{setNcCoin(coin);setNcAmount("");setNcBuyPrice(p?.usd?(p.usd<1?p.usd.toFixed(6):p.usd.toFixed(2)):"");setEditIdx(null);setShowAdd(true);}} style={{padding:"5px 10px",background:"transparent",border:`1px solid ${T.borderLight}`,color:"#9333EA",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:500,fontFamily:"'Inter',sans-serif"}}>+ Ekle</button></td></tr>);})}
           </tbody></table></div></div></div>}
 
       </main>
 
       {/* ═══ ADD/EDIT MODAL with CoinPicker ═══ */}
       {showAdd&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}} onClick={()=>{setShowAdd(false);setEditIdx(null);}}>
-        <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:"1px solid ${T.borderLight}",borderRadius:16,width:"100%",maxWidth:480,boxShadow:"0 24px 64px rgba(0,0,0,.5)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:`1px solid ${T.borderLight}`,borderRadius:16,width:"100%",maxWidth:480,boxShadow:"0 24px 64px rgba(0,0,0,.5)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${T.border}`}}><h3 style={{fontSize:16,fontWeight:600}}>{editIdx!==null?"Varlığı Düzenle":"Yeni Varlık Ekle"}</h3><button style={{background:"none",border:"none",color:T.textMuted,fontSize:18,cursor:"pointer"}} onClick={()=>{setShowAdd(false);setEditIdx(null);}}>✕</button></div>
           <div style={{padding:20}}>
             {/* Coin Picker */}
@@ -1865,9 +1935,9 @@ export default function CryptoPortfolio() {
                 <input value={newSectionInput} onChange={e=>setNewSectionInput(e.target.value)}
                   onKeyDown={e=>{if(e.key==="Enter"&&newSectionInput.trim()&&!sections.includes(newSectionInput.trim())){setSections(p=>[...p,newSectionInput.trim()]);setNcSection(newSectionInput.trim());setNewSectionInput("");}}}
                   placeholder="Yeni kategori ekle..."
-                  style={{flex:1,padding:"6px 10px",background:T.bgInput,border:"1px solid ${T.borderLight}",borderRadius:6,color:T.text,fontSize:12,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                  style={{flex:1,padding:"6px 10px",background:T.bgInput,border:`1px solid ${T.borderLight}`,borderRadius:6,color:T.text,fontSize:12,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
                 <button onClick={()=>{if(newSectionInput.trim()&&!sections.includes(newSectionInput.trim())){setSections(p=>[...p,newSectionInput.trim()]);setNcSection(newSectionInput.trim());setNewSectionInput("");}}}
-                  style={{padding:"6px 12px",background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:6,color:T.textSecondary,fontSize:11,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+</button>
+                  style={{padding:"6px 12px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:6,color:T.textSecondary,fontSize:11,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+</button>
               </div>
             </div>
 
@@ -1877,11 +1947,11 @@ export default function CryptoPortfolio() {
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                 <div>
                   <label style={{display:"block",fontSize:11,color:T.textSecondary,marginBottom:6,fontWeight:500}}>Miktar</label>
-                  <input type="number" step="any" placeholder="örn: 0.5" value={ncAmount} onChange={e=>setNcAmount(e.target.value)} style={{width:"100%",padding:"11px 12px",background:T.bgInput,border:"1px solid ${T.borderLight}",borderRadius:8,color:T.text,fontSize:14,outline:"none",fontFamily:"'JetBrains Mono',monospace"}}/>
+                  <input type="number" step="any" placeholder="örn: 0.5" value={ncAmount} onChange={e=>setNcAmount(e.target.value)} style={{width:"100%",padding:"11px 12px",background:T.bgInput,border:`1px solid ${T.borderLight}`,borderRadius:8,color:T.text,fontSize:14,outline:"none",fontFamily:"'JetBrains Mono',monospace"}}/>
                 </div>
                 <div>
                   <label style={{display:"block",fontSize:11,color:T.textSecondary,marginBottom:6,fontWeight:500}}>Alış Fiyatı ($)</label>
-                  <input type="number" step="any" placeholder="örn: 65000" value={ncBuyPrice} onChange={e=>setNcBuyPrice(e.target.value)} style={{width:"100%",padding:"11px 12px",background:T.bgInput,border:"1px solid ${T.borderLight}",borderRadius:8,color:T.text,fontSize:14,outline:"none",fontFamily:"'JetBrains Mono',monospace"}}/>
+                  <input type="number" step="any" placeholder="örn: 65000" value={ncBuyPrice} onChange={e=>setNcBuyPrice(e.target.value)} style={{width:"100%",padding:"11px 12px",background:T.bgInput,border:`1px solid ${T.borderLight}`,borderRadius:8,color:T.text,fontSize:14,outline:"none",fontFamily:"'JetBrains Mono',monospace"}}/>
                 </div>
               </div>
               {ncCoin && prices[ncCoin.id] && <div style={{marginTop:8,fontSize:11,color:T.textMuted}}>Güncel fiyat: <span style={{color:"#9333EA",fontFamily:"'JetBrains Mono',monospace"}}>{fmt(prices[ncCoin.id].usd,prices[ncCoin.id].usd<1?6:2)}</span></div>}
@@ -1925,13 +1995,13 @@ export default function CryptoPortfolio() {
 
       {/* Delete Confirm */}
       {delConfirm!==null&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}} onClick={()=>setDelConfirm(null)}>
-        <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:"1px solid ${T.borderLight}",borderRadius:16,width:"100%",maxWidth:380,boxShadow:"0 24px 64px rgba(0,0,0,.5)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:`1px solid ${T.borderLight}`,borderRadius:16,width:"100%",maxWidth:380,boxShadow:"0 24px 64px rgba(0,0,0,.5)"}} onClick={e=>e.stopPropagation()}>
           <div style={{padding:30,textAlign:"center"}}>
             <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
             <div style={{fontSize:16,fontWeight:600,marginBottom:8}}>Silmek istediğinize emin misiniz?</div>
             <div style={{color:T.textSecondary,fontSize:13,marginBottom:20}}>{pData[delConfirm]?.coin?.name} kaldırılacak.</div>
             <div style={{display:"flex",gap:10,justifyContent:"center"}}>
-              <button onClick={()=>setDelConfirm(null)} style={{padding:"10px 24px",background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:8,color:T.textSecondary,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>İptal</button>
+              <button onClick={()=>setDelConfirm(null)} style={{padding:"10px 24px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:8,color:T.textSecondary,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>İptal</button>
               <button onClick={()=>{setPortfolio(p=>p.filter((_,j)=>j!==delConfirm));setDelConfirm(null);}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#ff4466,#cc2244)",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Sil</button>
             </div>
           </div>
@@ -1950,7 +2020,7 @@ export default function CryptoPortfolio() {
           </div>
           <div style={{display:"flex",gap:8}}>
             <a href={pdfPreviewUrl} download={"InvestPulse_Rapor_"+new Date().getFullYear()+"_"+String(new Date().getMonth()+1).padStart(2,"0")+".pdf"} style={{background:T.green,color:"#000",padding:"8px 16px",borderRadius:8,fontSize:12,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>⬇ İndir</a>
-            <button onClick={()=>{URL.revokeObjectURL(pdfPreviewUrl);setPdfPreviewUrl(null);}} style={{background:"${T.redGlow}",border:"1px solid ${T.red}33",color:T.red,padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>✕ Kapat</button>
+            <button onClick={()=>{URL.revokeObjectURL(pdfPreviewUrl);setPdfPreviewUrl(null);}} style={{background:T.redGlow,border:`1px solid ${T.red}33`,color:T.red,padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>✕ Kapat</button>
           </div>
         </div>
         <iframe src={pdfPreviewUrl} style={{flex:1,border:"none",background:"#fff"}} title="PDF Preview"/>
@@ -1958,7 +2028,7 @@ export default function CryptoPortfolio() {
 
       {/* Rapor Geçmişi Modal */}
       {showReportHistory&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeUp .3s ease-out"}} onClick={()=>setShowReportHistory(false)}>
-        <div style={{background:T.bgCardSolid,border:"1px solid ${T.borderLight}",borderRadius:16,width:"90%",maxWidth:600,maxHeight:"80vh",overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:16,width:"90%",maxWidth:600,maxHeight:"80vh",overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${T.border}`}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>📋</span><span style={{fontSize:15,fontWeight:600,color:T.text}}>Rapor Geçmişi</span></div>
             <button onClick={()=>setShowReportHistory(false)} style={{background:"none",border:"none",color:T.textMuted,fontSize:18,cursor:"pointer"}}>✕</button>
@@ -1983,7 +2053,7 @@ export default function CryptoPortfolio() {
           </div>
           <div style={{padding:"12px 16px",borderTop:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between"}}>
             <button onClick={generateReport} style={{background:T.green,border:"none",color:"#000",padding:"8px 20px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>📄 Yeni Rapor Oluştur</button>
-            {reportHistory.length>0&&<button onClick={()=>{localStorage.removeItem("ip_report_history");setReportHistory([]);}} style={{background:"none",border:"1px solid ${T.red}33",color:T.red,padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:11}}>Geçmişi Temizle</button>}
+            {reportHistory.length>0&&<button onClick={()=>{localStorage.removeItem("ip_report_history");setReportHistory([]);}} style={{background:"none",border:`1px solid ${T.red}33`,color:T.red,padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:11}}>Geçmişi Temizle</button>}
           </div>
         </div>
       </div>}
