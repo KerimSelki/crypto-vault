@@ -1036,6 +1036,11 @@ export default function CryptoPortfolio() {
   }, [portfolios, prices]);
   const [marketFilter, setMarketFilter] = useState("all"); // all | crypto | bist | us | tefas
   const [showReportNotif, setShowReportNotif] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
+  const [showReportHistory, setShowReportHistory] = useState(false);
+  const [reportHistory, setReportHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("cv_report_history") || "[]"); } catch(e) { return []; }
+  });
 
   // Ay sonu hatırlatma — her ay 25'inden sonra göster
   useEffect(() => {
@@ -1201,9 +1206,9 @@ export default function CryptoPortfolio() {
         doc.text("CryptoVault Aylik Rapor - " + dateStr + " - Sayfa " + i + "/" + pageCount, w / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
       }
 
-      // Kaydet
-      const fileName = "CryptoVault_Rapor_" + now.getFullYear() + "_" + String(now.getMonth() + 1).padStart(2, "0") + ".pdf";
-      doc.save(fileName);
+      // Preview olarak göster
+      const pdfUrl = doc.output("bloburl");
+      setPdfPreviewUrl(pdfUrl);
 
       // İşaretle
       localStorage.setItem("cv_report_" + now.getFullYear() + "_" + now.getMonth(), "1");
@@ -1212,8 +1217,11 @@ export default function CryptoPortfolio() {
       // Rapor geçmişi
       try {
         const hist = JSON.parse(localStorage.getItem("cv_report_history") || "[]");
-        hist.push({ date: now.toISOString(), totVal: allTotVal, totInv: allTotInv, pnl: allTotPnl, assets: allPData.length });
-        localStorage.setItem("cv_report_history", JSON.stringify(hist.slice(-24)));
+        const entry = { date: now.toISOString(), totVal: allTotVal, totInv: allTotInv, pnl: allTotPnl, pnlPct: allTotPnlPct, assets: allPData.length, user: currentUser };
+        hist.push(entry);
+        const trimmed = hist.slice(-24);
+        localStorage.setItem("cv_report_history", JSON.stringify(trimmed));
+        setReportHistory(trimmed);
       } catch(e) {}
 
     } catch (err) {
@@ -1255,6 +1263,7 @@ export default function CryptoPortfolio() {
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <span style={{fontSize:12,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace"}}>👤 {currentUser}</span>
           <button onClick={generateReport} style={{background:"#0d1f12",border:"1px solid #1a3320",color:"#48BB78",padding:"0 12px",height:34,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:4,position:"relative"}} title="PDF Rapor Oluştur">📄 Rapor{showReportNotif&&<span style={{position:"absolute",top:-2,right:-2,width:8,height:8,background:"#ff4466",borderRadius:"50%",border:"2px solid #0a0e17"}}/>}</button>
+          <button onClick={()=>setShowReportHistory(true)} style={{background:"#111822",border:"1px solid #1a2332",color:"#8892a4",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}} title="Rapor Geçmişi">📋</button>
           <button onClick={()=>setShowSettings(true)} style={{background:"#111822",border:"1px solid #1a2332",color:"#8892a4",width:34,height:34,borderRadius:8,cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}} title="Ayarlar">⚙</button>
           <button onClick={()=>{setIsLoggedIn(false);setCurrentUser("");try{localStorage.removeItem("cv_session");}catch(e){}}} style={{background:"#1a0d12",border:"1px solid #2a1520",color:"#ff4466",padding:"0 12px",height:34,borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>Çıkış</button>
         </div>
@@ -1488,6 +1497,41 @@ export default function CryptoPortfolio() {
             </div>))}
           </div>}
 
+          {/* 🔥 En Çok Yükselen & Düşenler */}
+          {allPData.length>2&&(()=>{
+            const sorted=[...allPData].sort((a,b)=>b.change24h-a.change24h);
+            const gainers=sorted.filter(x=>x.change24h>0).slice(0,5);
+            const losers=[...sorted].reverse().filter(x=>x.change24h<0).slice(0,5);
+            if(gainers.length===0&&losers.length===0) return null;
+            const renderItem=(item,i,isGainer)=>{
+              const mc=getMarketColor(getMarketType(item.coinId));
+              return(<div key={item.coinId} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<4?"1px solid #111822":"none"}}>
+                <div style={{width:24,height:24,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,fontFamily:"'Space Mono',monospace",background:mc+"18",color:mc}}>{item.coin?.symbol?.charAt(0)||"?"}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>
+                    <span style={{fontWeight:600,fontSize:12,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.coin?.symbol}</span>
+                    <span style={{fontSize:7,padding:"1px 3px",borderRadius:2,background:mc+"15",color:mc,fontWeight:700}}>{getMarketLabel(getMarketType(item.coinId))}</span>
+                  </div>
+                  <div style={{fontSize:10,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace"}}>{fmt(item.currentPrice,item.currentPrice<1?4:2)}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:isGainer?"#00ff88":"#ff4466"}}>{isGainer?"▲":"▼"} {Math.abs(item.change24h).toFixed(2)}%</div>
+                  <div style={{fontSize:10,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace"}}>{fmt(item.currentValue)}</div>
+                </div>
+              </div>);
+            };
+            return(<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:20}}>
+              {gainers.length>0&&<div style={{...st.card,padding:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}><span style={{fontSize:16}}>🚀</span><span style={{fontSize:13,fontWeight:600,color:"#00ff88"}}>En Çok Yükselenler</span><span style={{fontSize:10,color:"#4a5568"}}>(24s)</span></div>
+                {gainers.map((item,i)=>renderItem(item,i,true))}
+              </div>}
+              {losers.length>0&&<div style={{...st.card,padding:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}><span style={{fontSize:16}}>📉</span><span style={{fontSize:13,fontWeight:600,color:"#ff4466"}}>En Çok Düşenler</span><span style={{fontSize:10,color:"#4a5568"}}>(24s)</span></div>
+                {losers.map((item,i)=>renderItem(item,i,false))}
+              </div>}
+            </div>);
+          })()}
+
           {/* Dağılım + Tüm Varlıklar */}
           <div style={{display:"grid",gridTemplateColumns:allPData.length>0?"260px 1fr":"1fr",gap:18}}>
             {allPData.length>0&&<div style={st.card}>
@@ -1709,6 +1753,54 @@ export default function CryptoPortfolio() {
       </div>}
 
       <Settings show={showSettings} onClose={()=>setShowSettings(false)} apiKey={apiKey} onKeyChange={setApiKey} onSave={saveKey} keyStatus={keyStatus}/>
+
+      {/* PDF Preview Modal */}
+      {pdfPreviewUrl&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1000,display:"flex",flexDirection:"column",animation:"fadeUp .3s ease-out"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",background:"#111822",borderBottom:"1px solid #1a2332"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:18}}>📄</span>
+            <span style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>Portföy Raporu</span>
+            <span style={{fontSize:11,color:"#4a5568"}}>{new Date().toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"})}</span>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <a href={pdfPreviewUrl} download={"CryptoVault_Rapor_"+new Date().getFullYear()+"_"+String(new Date().getMonth()+1).padStart(2,"0")+".pdf"} style={{background:"#48BB78",color:"#000",padding:"8px 16px",borderRadius:8,fontSize:12,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>⬇ İndir</a>
+            <button onClick={()=>{URL.revokeObjectURL(pdfPreviewUrl);setPdfPreviewUrl(null);}} style={{background:"#1a0d12",border:"1px solid #2a1520",color:"#ff4466",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>✕ Kapat</button>
+          </div>
+        </div>
+        <iframe src={pdfPreviewUrl} style={{flex:1,border:"none",background:"#fff"}} title="PDF Preview"/>
+      </div>}
+
+      {/* Rapor Geçmişi Modal */}
+      {showReportHistory&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeUp .3s ease-out"}} onClick={()=>setShowReportHistory(false)}>
+        <div style={{background:"#131a27",border:"1px solid #1e2a3a",borderRadius:16,width:"90%",maxWidth:600,maxHeight:"80vh",overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:"1px solid #1a2332"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>📋</span><span style={{fontSize:15,fontWeight:600,color:"#e2e8f0"}}>Rapor Geçmişi</span></div>
+            <button onClick={()=>setShowReportHistory(false)} style={{background:"none",border:"none",color:"#4a5568",fontSize:18,cursor:"pointer"}}>✕</button>
+          </div>
+          <div style={{padding:16,overflowY:"auto",maxHeight:"65vh"}}>
+            {reportHistory.length===0?<div style={{textAlign:"center",padding:40,color:"#4a5568"}}><div style={{fontSize:40,marginBottom:8}}>📄</div>Henüz rapor oluşturulmamış</div>:
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {[...reportHistory].reverse().map((r,i)=>{
+                const d=new Date(r.date);
+                return(<div key={i} style={{background:"#0d1117",border:"1px solid #1a2332",borderRadius:10,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{d.toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"})}</div>
+                    <div style={{fontSize:11,color:"#4a5568",marginTop:2}}>{d.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})} • {r.assets||0} varlık{r.user?" • "+r.user:""}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:14,fontWeight:700,fontFamily:"'Space Mono',monospace",color:"#fff"}}>{fmt(r.totVal||0)}</div>
+                    <div style={{fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:(r.pnl||0)>=0?"#00ff88":"#ff4466",marginTop:2}}>{(r.pnl||0)>=0?"+":""}{fmt(r.pnl||0)} ({r.pnlPct!=null?fPct(r.pnlPct):"—"})</div>
+                  </div>
+                </div>);
+              })}
+            </div>}
+          </div>
+          <div style={{padding:"12px 16px",borderTop:"1px solid #1a2332",display:"flex",justifyContent:"space-between"}}>
+            <button onClick={generateReport} style={{background:"#48BB78",border:"none",color:"#000",padding:"8px 20px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>📄 Yeni Rapor Oluştur</button>
+            {reportHistory.length>0&&<button onClick={()=>{localStorage.removeItem("cv_report_history");setReportHistory([]);}} style={{background:"none",border:"1px solid #2a1520",color:"#ff4466",padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:11}}>Geçmişi Temizle</button>}
+          </div>
+        </div>
+      </div>}
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
