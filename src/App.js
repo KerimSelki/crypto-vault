@@ -17,7 +17,7 @@ const Spark = ({data,color}) => (<ResponsiveContainer width={100} height={36}><A
 
 // ═══ Coin Search/Picker Component ═══
 const searchCache = {};
-const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins }) => {
+const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins, fmpStocks }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [localResults, setLocalResults] = useState([]);
@@ -43,21 +43,34 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins }) => {
     if (!q || q.length < 1) { setResults([]); setLocalResults([]); return; }
     const ql = q.toLowerCase();
 
-    // 1) Instant local filter from known coins + stocks
+    // 1) Instant local filter from known coins + STOCK_DATA + FMP stocks
     const local = knownCoins.filter(c =>
       c.name.toLowerCase().includes(ql) || c.symbol.toLowerCase().includes(ql)
     ).map(c => ({ ...c, thumb: null, marketCapRank: null, isLocal: true }));
-    // Also search STOCK_DATA
+    
+    // STOCK_DATA (BIST + US + TEFAS)
     const stockResults = Object.values(STOCK_DATA).filter(s =>
       s.name.toLowerCase().includes(ql) || s.symbol.toLowerCase().includes(ql) || s.id.toLowerCase().includes(ql)
     ).map(s => ({ ...s, thumb: null, marketCapRank: null, isLocal: true, isStock: true }));
+    
+    // FMP full stock list (NYSE + NASDAQ + ETF) — tüm US hisseleri
+    const fmpResults = (fmpStocks || []).filter(s =>
+      s.n.toLowerCase().includes(ql) || s.s.toLowerCase().includes(ql)
+    ).slice(0, 30).map(s => ({
+      id: s.s, symbol: s.s, name: s.n,
+      market: s.s.endsWith(".IS") ? "bist" : "us",
+      currency: s.s.endsWith(".IS") ? "₺" : "$",
+      sector: s.t === "etf" ? "ETF" : (s.e || "US"),
+      thumb: null, marketCapRank: null, isLocal: true, isStock: true, isFMP: true,
+    }));
+
     const combined = [];
     const seen = new Set();
-    [...stockResults, ...local].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); combined.push(c); } });
-    setLocalResults(combined.slice(0, 25));
+    [...stockResults, ...fmpResults, ...local].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); combined.push(c); } });
+    setLocalResults(combined.slice(0, 30));
 
-    // If stock/TEFAS results found, skip CoinGecko API (would return irrelevant crypto)
-    if (stockResults.length > 0 && q.length <= 4) { setResults([]); setSearching(false); return; }
+    // If stock results found and query is short, skip CoinGecko API
+    if ((stockResults.length + fmpResults.length) > 0 && q.length <= 4) { setResults([]); setSearching(false); return; }
 
     if (q.length < 2) { setResults([]); return; }
 
@@ -82,13 +95,12 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins }) => {
       setResults([]);
     }
     setSearching(false);
-  }, [savedKey, knownCoins]);
+  }, [savedKey, knownCoins, fmpStocks]);
 
   const handleInput = (e) => {
     const val = e.target.value;
     setQuery(val);
     setIsOpen(true);
-    // Instant local filter — knownCoins + STOCK_DATA
     if (val.length >= 1) {
       const ql = val.toLowerCase();
       const localCoins = knownCoins.filter(c =>
@@ -97,12 +109,20 @@ const CoinPicker = ({ value, onChange, prices, savedKey, knownCoins }) => {
       const stockMatches = Object.values(STOCK_DATA).filter(s =>
         s.name.toLowerCase().includes(ql) || s.symbol.toLowerCase().includes(ql) || s.id.toLowerCase().includes(ql)
       ).map(s => ({ ...s, thumb: null, marketCapRank: null, isLocal: true, isStock: true }));
+      const fmpMatches = (fmpStocks || []).filter(s =>
+        s.n.toLowerCase().includes(ql) || s.s.toLowerCase().includes(ql)
+      ).slice(0, 20).map(s => ({
+        id: s.s, symbol: s.s, name: s.n,
+        market: s.s.endsWith(".IS") ? "bist" : "us",
+        currency: s.s.endsWith(".IS") ? "₺" : "$",
+        sector: s.t === "etf" ? "ETF" : (s.e || "US"),
+        thumb: null, marketCapRank: null, isLocal: true, isStock: true, isFMP: true,
+      }));
       const seen = new Set();
       const combined = [];
-      [...localCoins, ...stockMatches].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); combined.push(c); } });
-      setLocalResults(combined.slice(0, 25));
+      [...stockMatches, ...fmpMatches, ...localCoins].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); combined.push(c); } });
+      setLocalResults(combined.slice(0, 30));
     }
-    // Debounced API search (shorter delay)
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => searchCoins(val), 250);
   };
@@ -509,6 +529,7 @@ export default function CryptoPortfolio() {
   const [chartData, setChartData] = useState({});
   const [selChart, setSelChart] = useState("bitcoin");
   const [loading, setLoading] = useState(true);
+  const [fmpStocks, setFmpStocks] = useState([]);
   const [search, setSearch] = useState("");
   const [chartPeriod, setChartPeriod] = useState(30);
   const [editIdx, setEditIdx] = useState(null);
@@ -517,7 +538,7 @@ export default function CryptoPortfolio() {
   const [connStatus, setConnStatus] = useState("connecting");
   const [retryCount, setRetryCount] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [refreshInterval, setRefreshInterval] = useState(60000);
+  const [refreshInterval, setRefreshInterval] = useState(300000);
   const [rateLimitInfo, setRateLimitInfo] = useState(null);
   const [reqLog, setReqLog] = useState([]);
   const [showSettings, setShowSettings] = useState(false);
@@ -868,6 +889,38 @@ export default function CryptoPortfolio() {
         }
       }
 
+      // 5) TEFAS Fonları — Vercel serverless function üzerinden
+      const tefasIds = Object.keys(TEFAS_DATA);
+      const portfolioTefas = [...new Set(Object.values(portfolios).flat().map(p=>p.coinId).filter(id=>id.endsWith(".TEFAS")))];
+      const tefasToFetch = [...new Set([...portfolioTefas, ...tefasIds])];
+
+      if (tefasToFetch.length > 0) {
+        try {
+          const baseUrl = window.location.origin;
+          const url = `${baseUrl}/api/tefas?symbols=${tefasToFetch.join(",")}`;
+          const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.results?.length > 0) {
+              data.results.forEach(r => {
+                allPrices[r.symbol] = {
+                  usd: r.price || 0,
+                  usd_24h_change: r.changesPercentage || 0,
+                  usd_7d_change: 0,
+                  usd_market_cap: 0,
+                  currency: "₺",
+                  market: "tefas",
+                };
+              });
+              source += ` + TEFAS: ${data.results.length}`;
+              log("price", true, `TEFAS: ${data.results.length} fon`);
+            }
+          }
+        } catch (e) {
+          log("price", false, "TEFAS: API erişilemedi");
+        }
+      }
+
       if (Object.keys(allPrices).length > 0) {
         setPrices(prev => ({ ...prev, ...allPrices }));
         setApiMode("live"); setConnStatus("connected"); setLastUpdate(new Date());
@@ -940,6 +993,36 @@ export default function CryptoPortfolio() {
 
   useEffect(()=>{fetchPrices();return()=>{if(retryRef.current)clearTimeout(retryRef.current);};},[]);
   useEffect(()=>{if(intRef.current)clearInterval(intRef.current);intRef.current=setInterval(()=>{if(connStatus!=="retrying"&&connStatus!=="ratelimited")fetchPrices();},refreshInterval);return()=>{if(intRef.current)clearInterval(intRef.current);};},[refreshInterval,connStatus,fetchPrices]);
+
+  // FMP tüm hisse listesi — startup'ta çek, 24 saat cache'le
+  useEffect(() => {
+    const loadFmpStocks = async () => {
+      // Önce localStorage cache'e bak
+      try {
+        const cached = JSON.parse(localStorage.getItem("cv_fmp_stocklist") || "{}");
+        if (cached.stocks && cached.ts && (Date.now() - cached.ts < 86400000)) {
+          setFmpStocks(cached.stocks);
+          return;
+        }
+      } catch(e) {}
+
+      // Cache yoksa veya eski → API'den çek
+      try {
+        const baseUrl = window.location.origin;
+        const res = await fetch(`${baseUrl}/api/stocklist`, { signal: AbortSignal.timeout(30000) });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.stocks?.length > 0) {
+            setFmpStocks(data.stocks);
+            try { localStorage.setItem("cv_fmp_stocklist", JSON.stringify({ stocks: data.stocks, ts: Date.now() })); } catch(e) {}
+          }
+        }
+      } catch (e) {
+        console.log("FMP stock list fetch failed:", e.message);
+      }
+    };
+    loadFmpStocks();
+  }, []);
   useEffect(()=>{if(Object.keys(prices).length>0)fetchChart(selChart);},[selChart,chartPeriod,prices,fetchChart]);
 
   const saveKey=()=>{if(apiKey.trim()){setSavedKey(apiKey.trim());setKeyStatus({type:"success",message:"API key kaydedildi!"});setRetryCount(0);setTimeout(()=>fetchPrices(),500);}else{setSavedKey("");setKeyStatus({type:"info",message:"Key kaldırıldı."});}setTimeout(()=>setKeyStatus(null),4000);};
@@ -1628,31 +1711,47 @@ export default function CryptoPortfolio() {
                 onChange={async (coin) => {
                   setNcCoin(coin);
                   setNcAmount("");
-                  // Auto-fill with current API price
                   const p = prices[coin.id]?.usd;
                   if (p) {
                     setNcBuyPrice(p < 1 ? p.toFixed(6) : p.toFixed(2));
                   } else {
                     setNcBuyPrice("");
-                    // Fetch price from API
-                    try {
-                      const base = savedKey ? "https://pro-api.coingecko.com/api/v3" : "https://api.coingecko.com/api/v3";
-                      const kp = savedKey ? `&x_cg_pro_api_key=${savedKey}` : "";
-                      const res = await fetch(`${base}/simple/price?ids=${coin.id}&vs_currencies=usd&include_24hr_change=true${kp}`);
-                      if (res.ok) {
-                        const data = await res.json();
-                        const usd = data[coin.id]?.usd;
-                        if (usd) {
-                          setNcBuyPrice(usd < 1 ? usd.toFixed(6) : usd.toFixed(2));
-                          setPrices(prev => ({...prev, [coin.id]: {usd, usd_24h_change: data[coin.id]?.usd_24h_change||0, usd_7d_change:0, usd_market_cap:0}}));
+                    // Stock/ETF ise FMP'den fiyat çek
+                    if (coin.isStock || coin.isFMP || isStock(coin.id)) {
+                      try {
+                        const FMP_KEY = "00rEssEWw276o3NRJY1BcLH1ACQGb1D6";
+                        const res = await fetch(`https://financialmodelingprep.com/api/v3/quote/${coin.id}?apikey=${FMP_KEY}`, { signal: AbortSignal.timeout(10000) });
+                        if (res.ok) {
+                          const data = await res.json();
+                          if (data?.[0]?.price) {
+                            const pr = data[0].price;
+                            setNcBuyPrice(pr < 1 ? pr.toFixed(6) : pr.toFixed(2));
+                            setPrices(prev => ({...prev, [coin.id]: { usd: pr, usd_24h_change: data[0].changesPercentage||0, usd_7d_change:0, usd_market_cap: data[0].marketCap||0, currency: coin.currency||"$", market: coin.market||"us" }}));
+                          }
                         }
-                      }
-                    } catch(e) {}
+                      } catch(e) {}
+                    } else {
+                      // Crypto — CoinGecko
+                      try {
+                        const base = savedKey ? "https://pro-api.coingecko.com/api/v3" : "https://api.coingecko.com/api/v3";
+                        const kp = savedKey ? `&x_cg_pro_api_key=${savedKey}` : "";
+                        const res = await fetch(`${base}/simple/price?ids=${coin.id}&vs_currencies=usd&include_24hr_change=true${kp}`);
+                        if (res.ok) {
+                          const data = await res.json();
+                          const usd = data[coin.id]?.usd;
+                          if (usd) {
+                            setNcBuyPrice(usd < 1 ? usd.toFixed(6) : usd.toFixed(2));
+                            setPrices(prev => ({...prev, [coin.id]: {usd, usd_24h_change: data[coin.id]?.usd_24h_change||0, usd_7d_change:0, usd_market_cap:0}}));
+                          }
+                        }
+                      } catch(e) {}
+                    }
                   }
                 }}
                 prices={prices}
                 savedKey={savedKey}
                 knownCoins={knownCoins}
+                fmpStocks={fmpStocks}
               />
             </div>
 

@@ -37,7 +37,7 @@ export const getMarketColor = (m) => ({
 
 // ── Sabitler ──
 export const CLR = ["#F7931A","#627EEA","#F3BA2F","#9945FF","#00AAE4","#0033AD","#E84142","#E6007A","#C2A633","#2A5ADA","#FF0000","#8247E5","#BFBBBB","#FF007A","#4169E1","#FF6B6B","#48BB78","#ED8936","#9F7AEA","#38B2AC"];
-export const REFRESH = [{label:"10s",value:10000},{label:"30s",value:30000},{label:"60s",value:60000},{label:"5dk",value:300000}];
+export const REFRESH = [{label:"1dk",value:60000},{label:"5dk",value:300000},{label:"10dk",value:600000},{label:"30dk",value:1800000}];
 export const MAX_RETRIES = 5;
 export const RETRY_DELAYS = [2000, 5000, 10000, 30000, 60000];
 export const USD_TRY_DEFAULT = 36.42;
