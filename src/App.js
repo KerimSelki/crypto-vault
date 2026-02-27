@@ -1497,38 +1497,44 @@ export default function CryptoPortfolio() {
             </div>))}
           </div>}
 
-          {/* 🔥 En Çok Yükselen & Düşenler */}
-          {allPData.length>2&&(()=>{
-            const sorted=[...allPData].sort((a,b)=>b.change24h-a.change24h);
-            const gainers=sorted.filter(x=>x.change24h>0).slice(0,5);
-            const losers=[...sorted].reverse().filter(x=>x.change24h<0).slice(0,5);
-            if(gainers.length===0&&losers.length===0) return null;
-            const renderItem=(item,i,isGainer)=>{
+          {/* 🔥 Portföyümde En Çok Yükselen & Düşenler */}
+          {allPData.length>1&&(()=>{
+            const sorted=[...allPData].filter(x=>x.currentPrice>0).sort((a,b)=>b.change24h-a.change24h);
+            const gainers=sorted.slice(0,5);
+            const losers=[...sorted].reverse().slice(0,5);
+            if(sorted.length===0) return null;
+            const renderItem=(item,i,max)=>{
               const mc=getMarketColor(getMarketType(item.coinId));
-              return(<div key={item.coinId} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<4?"1px solid #111822":"none"}}>
-                <div style={{width:24,height:24,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,fontFamily:"'Space Mono',monospace",background:mc+"18",color:mc}}>{item.coin?.symbol?.charAt(0)||"?"}</div>
+              const isUp=item.change24h>=0;
+              const absPct=Math.abs(item.change24h);
+              const maxPct=Math.max(...sorted.map(x=>Math.abs(x.change24h)),1);
+              const barW=Math.max((absPct/maxPct)*100,2);
+              return(<div key={item.coinId} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:i<max-1?"1px solid #111822":"none"}}>
+                <div style={{width:26,height:26,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,fontFamily:"'Space Mono',monospace",background:mc+"18",color:mc}}>{item.coin?.symbol?.charAt(0)||"?"}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
                     <span style={{fontWeight:600,fontSize:12,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.coin?.symbol}</span>
                     <span style={{fontSize:7,padding:"1px 3px",borderRadius:2,background:mc+"15",color:mc,fontWeight:700}}>{getMarketLabel(getMarketType(item.coinId))}</span>
                   </div>
-                  <div style={{fontSize:10,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace"}}>{fmt(item.currentPrice,item.currentPrice<1?4:2)}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}>
+                    <div style={{flex:1,height:3,background:"#1a2332",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:barW+"%",background:isUp?"#00ff88":"#ff4466",borderRadius:2,transition:"width .5s"}}/></div>
+                  </div>
                 </div>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:isGainer?"#00ff88":"#ff4466"}}>{isGainer?"▲":"▼"} {Math.abs(item.change24h).toFixed(2)}%</div>
+                <div style={{textAlign:"right",minWidth:80}}>
+                  <div style={{fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:isUp?"#00ff88":"#ff4466"}}>{isUp?"▲":"▼"} {absPct.toFixed(2)}%</div>
                   <div style={{fontSize:10,color:"#4a5568",fontFamily:"'JetBrains Mono',monospace"}}>{fmt(item.currentValue)}</div>
                 </div>
               </div>);
             };
             return(<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:20}}>
-              {gainers.length>0&&<div style={{...st.card,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}><span style={{fontSize:16}}>🚀</span><span style={{fontSize:13,fontWeight:600,color:"#00ff88"}}>En Çok Yükselenler</span><span style={{fontSize:10,color:"#4a5568"}}>(24s)</span></div>
-                {gainers.map((item,i)=>renderItem(item,i,true))}
-              </div>}
-              {losers.length>0&&<div style={{...st.card,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}><span style={{fontSize:16}}>📉</span><span style={{fontSize:13,fontWeight:600,color:"#ff4466"}}>En Çok Düşenler</span><span style={{fontSize:10,color:"#4a5568"}}>(24s)</span></div>
-                {losers.map((item,i)=>renderItem(item,i,false))}
-              </div>}
+              <div style={{...st.card,padding:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}><span style={{fontSize:16}}>🚀</span><span style={{fontSize:13,fontWeight:600,color:"#00ff88"}}>En Çok Yükselen</span><span style={{fontSize:10,color:"#4a5568"}}>(24s)</span></div>
+                {gainers.map((item,i)=>renderItem(item,i,gainers.length))}
+              </div>
+              <div style={{...st.card,padding:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}><span style={{fontSize:16}}>📉</span><span style={{fontSize:13,fontWeight:600,color:"#ff4466"}}>En Çok Düşen</span><span style={{fontSize:10,color:"#4a5568"}}>(24s)</span></div>
+                {losers.map((item,i)=>renderItem(item,i,losers.length))}
+              </div>
             </div>);
           })()}
 
