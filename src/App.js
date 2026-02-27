@@ -1712,26 +1712,30 @@ export default function CryptoPortfolio() {
                   setNcCoin(coin);
                   setNcAmount("");
                   const p = prices[coin.id]?.usd;
-                  if (p) {
+                  if (p && p > 0) {
                     setNcBuyPrice(p < 1 ? p.toFixed(6) : p.toFixed(2));
                   } else {
-                    setNcBuyPrice("");
-                    // Stock/ETF ise FMP'den fiyat çek
-                    if (coin.isStock || coin.isFMP || isStock(coin.id)) {
+                    setNcBuyPrice("yükleniyor...");
+                    // Her zaman FMP'yi dene (stock + ETF + bilinmeyen)
+                    const isStockLike = coin.isStock || coin.isFMP || isStock(coin.id) || coin.market === "us" || coin.market === "bist";
+                    if (isStockLike || !coin.market || coin.market !== "crypto") {
                       try {
                         const FMP_KEY = "00rEssEWw276o3NRJY1BcLH1ACQGb1D6";
-                        const res = await fetch(`https://financialmodelingprep.com/api/v3/quote/${coin.id}?apikey=${FMP_KEY}`, { signal: AbortSignal.timeout(10000) });
+                        const sym = coin.id || coin.symbol;
+                        const res = await fetch(`https://financialmodelingprep.com/api/v3/quote/${sym}?apikey=${FMP_KEY}`, { signal: AbortSignal.timeout(10000) });
                         if (res.ok) {
                           const data = await res.json();
                           if (data?.[0]?.price) {
                             const pr = data[0].price;
                             setNcBuyPrice(pr < 1 ? pr.toFixed(6) : pr.toFixed(2));
                             setPrices(prev => ({...prev, [coin.id]: { usd: pr, usd_24h_change: data[0].changesPercentage||0, usd_7d_change:0, usd_market_cap: data[0].marketCap||0, currency: coin.currency||"$", market: coin.market||"us" }}));
+                            return;
                           }
                         }
-                      } catch(e) {}
-                    } else {
-                      // Crypto — CoinGecko
+                      } catch(e) { console.log("FMP quote error:", e); }
+                    }
+                    // Crypto — CoinGecko fallback
+                    if (coin.market === "crypto" || (!coin.isStock && !coin.isFMP)) {
                       try {
                         const base = savedKey ? "https://pro-api.coingecko.com/api/v3" : "https://api.coingecko.com/api/v3";
                         const kp = savedKey ? `&x_cg_pro_api_key=${savedKey}` : "";
@@ -1742,10 +1746,12 @@ export default function CryptoPortfolio() {
                           if (usd) {
                             setNcBuyPrice(usd < 1 ? usd.toFixed(6) : usd.toFixed(2));
                             setPrices(prev => ({...prev, [coin.id]: {usd, usd_24h_change: data[coin.id]?.usd_24h_change||0, usd_7d_change:0, usd_market_cap:0}}));
+                            return;
                           }
                         }
                       } catch(e) {}
                     }
+                    setNcBuyPrice("");
                   }
                 }}
                 prices={prices}
