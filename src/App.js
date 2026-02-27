@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { themes, animations, SPLASH_DURATION, chartColors } from "./theme";
+import { themes, animations, SPLASH_DURATION } from "./theme";
 
 // ═══ Modüler Veri Kaynakları ═══
 import {
@@ -12,7 +12,7 @@ import {
   isStock, getMarketType, getMarketLabel, getMarketColor,
   CLR, REFRESH, MAX_RETRIES, RETRY_DELAYS,
 } from "./data";
-import { fmt, fmtTRY, fPct, genChart } from "./utils/format";
+import { fmt, fPct, genChart } from "./utils/format";
 
 const Spark = ({data,color}) => (<ResponsiveContainer width={100} height={36}><AreaChart data={data.slice(-14)}><defs><linearGradient id={`s${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity={.3}/><stop offset="100%" stopColor={color} stopOpacity={0}/></linearGradient></defs><Area type="monotone" dataKey="price" stroke={color} strokeWidth={1.5} fill={`url(#s${color.replace("#","")})`} dot={false}/></AreaChart></ResponsiveContainer>);
 
@@ -262,7 +262,7 @@ const ConnBar = ({status,retryCount,lastUpdate,refreshInterval,onRefreshChange,a
           {REFRESH.map(o=><button key={o.value} onClick={()=>onRefreshChange(o.value)} style={{padding:"4px 10px",background:refreshInterval===o.value?"#9333EA18":"transparent",border:`1px solid ${refreshInterval===o.value?"#9333EA44":"#1E2035"}`,color:refreshInterval===o.value?"#9333EA":"#4A4D65",borderRadius:4,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>{o.label}</button>)}</div>
         </div>
       </div>
-      {rateLimitInfo&&<div style={{marginTop:8,padding:"8px 12px",background:"#1a120a",borderRadius:8,border:"1px solid #3d2800"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"#D4A017",fontSize:11}}>⚠ Rate Limit</span><span style={{color:"#8B8EA0",fontSize:11}}>{rateLimitInfo}</span></div></div>}
+      {rateLimitInfo&&<div style={{marginTop:8,padding:"8px 12px",background:"rgba(212,160,23,.08)",borderRadius:8,border:"1px solid rgba(212,160,23,.2)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:"#D4A017",fontSize:11}}>⚠ Rate Limit</span><span style={{color:"#8B8EA0",fontSize:11}}>{rateLimitInfo}</span></div></div>}
     </div>
   );
 };
@@ -511,7 +511,7 @@ const AuthScreen = ({ onLogin }) => {
           {success && <div style={{padding:"10px 14px",background:"rgba(34,197,94,.07)",border:"1px solid rgba(34,197,94,.2)",borderRadius:8,color:"#22C55E",fontSize:13,marginBottom:16,display:"flex",alignItems:"center",gap:8}}><span>✓</span>{success}</div>}
 
           <button onClick={mode==="login"?handleLogin:mode==="register"?handleRegister:handleForgot} disabled={loading}
-            style={{width:"100%",padding:"14px",background:loading?"#6b4a0a":"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:600,cursor:loading?"wait":"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s",boxShadow:"0 4px 24px rgba(247,147,26,.25)",opacity:loading?.7:1}}>
+            style={{width:"100%",padding:"14px",background:loading?"#6b4a0a":"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:12,color:"#fff",fontSize:15,fontWeight:600,cursor:loading?"wait":"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s",boxShadow:"0 4px 24px rgba(147,51,234,.25)",opacity:loading?.7:1}}>
             {loading?"İşleniyor...":mode==="login"?"Giriş Yap":mode==="register"?"Kayıt Ol":"Kullanıcı Adımı Göster"}
           </button>
 
@@ -1091,7 +1091,7 @@ export default function CryptoPortfolio() {
           }
         }
       } catch (e) {
-        console.log("FMP stock list fetch failed:", e.message);
+        // // console.log("FMP stock list fetch failed:", e.message);
       }
     };
     loadFmpStocks();
@@ -1503,14 +1503,14 @@ export default function CryptoPortfolio() {
           </button>)}
       </nav>
       <main style={{padding:"20px 24px",maxWidth:1300,margin:"0 auto"}}>
-        {showReportNotif&&<div style={{background:"linear-gradient(135deg,${T.greenGlow},${T.bgCardSolid})",border:"1px solid ${T.green}33",borderRadius:12,padding:"14px 20px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        {showReportNotif&&<div style={{background:`linear-gradient(135deg,${T.greenGlow},${T.bgCardSolid})`,border:`1px solid ${T.green}33`,borderRadius:12,padding:"14px 20px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:20}}>📊</span>
             <div><div style={{fontSize:13,color:T.green,fontWeight:600}}>Aylık Rapor Zamanı</div><div style={{fontSize:11,color:T.textMuted,marginTop:2}}>Bu ay henüz portföy raporu oluşturmadınız</div></div>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={generateReport} style={{background:T.green,border:"none",color:"#000",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>Rapor Oluştur</button>
-            <button onClick={()=>setShowReportNotif(false)} style={{background:"none",border:"1px solid ${T.green}33",color:T.textMuted,padding:"8px 12px",borderRadius:8,cursor:"pointer",fontSize:12}}>Kapat</button>
+            <button onClick={generateReport} style={{background:T.green,border:"none",color:"#0B0D15",padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>Rapor Oluştur</button>
+            <button onClick={()=>setShowReportNotif(false)} style={{background:"none",border:`1px solid ${T.green}33`,color:T.textMuted,padding:"8px 12px",borderRadius:8,cursor:"pointer",fontSize:12}}>Kapat</button>
           </div>
         </div>}
 
@@ -1548,7 +1548,7 @@ export default function CryptoPortfolio() {
                   placeholder="örn: Uzun Vade"
                   style={{flex:1,padding:"8px 10px",background:T.bg,border:`1px solid ${T.borderLight}`,borderRadius:6,color:T.text,fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
                 <button onClick={()=>{if(newPortfolioName.trim()){setPortfolios(prev=>({...prev,[newPortfolioName.trim()]:[]}));setActivePortfolio(newPortfolioName.trim());setNewPortfolioName("");setShowPortfolioMenu(false);}}}
-                  style={{padding:"8px 14px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:6,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Ekle</button>
+                  style={{padding:"8px 14px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:6,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Ekle</button>
               </div>
             </div>}
 
@@ -1564,7 +1564,7 @@ export default function CryptoPortfolio() {
                 <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
                   <button onClick={()=>setRenameTarget(null)} style={{padding:"8px 16px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:6,color:T.textSecondary,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>İptal</button>
                   <button onClick={()=>{if(renameValue.trim()&&renameValue!==renameTarget){setPortfolios(prev=>{const next={};Object.entries(prev).forEach(([k,v])=>{next[k===renameTarget?renameValue.trim():k]=v;});return next;});if(activePortfolio===renameTarget)setActivePortfolio(renameValue.trim());setRenameTarget(null);}}}
-                    style={{padding:"8px 16px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:6,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Kaydet</button>
+                    style={{padding:"8px 16px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:6,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Kaydet</button>
                 </div>
               </div>
             </div>}
@@ -1578,10 +1578,10 @@ export default function CryptoPortfolio() {
             <div style={st.card}>
               <h3 style={{fontSize:14,fontWeight:600,marginBottom:12}}>Dağılım</h3>
               {pieData.length>0?<><ResponsiveContainer width="100%" height={200}><PieChart><Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">{pieData.map((e,i)=><Cell key={i} fill={e.color}/>)}</Pie><Tooltip formatter={v=>fmt(v)} contentStyle={st.tt}/></PieChart></ResponsiveContainer>
-              <div style={{marginTop:8}}>{pieData.map((item,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0",borderBottom:"1px solid ${T.bgCardSolid}"}}><span style={{width:8,height:8,borderRadius:2,background:item.color,flexShrink:0}}/><span style={{flex:1,fontSize:12,color:T.textSecondary}}>{item.name}</span><span style={{fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{totVal>0?((item.value/totVal)*100).toFixed(1):0}%</span></div>)}</div></>:<div style={{textAlign:"center",padding:40,color:T.textMuted}}>Portföye varlık ekleyin</div>}
+              <div style={{marginTop:8}}>{pieData.map((item,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0",borderBottom:`1px solid ${T.bgCardSolid}`}}><span style={{width:8,height:8,borderRadius:2,background:item.color,flexShrink:0}}/><span style={{flex:1,fontSize:12,color:T.textSecondary}}>{item.name}</span><span style={{fontSize:11,fontFamily:"'JetBrains Mono',monospace"}}>{totVal>0?((item.value/totVal)*100).toFixed(1):0}%</span></div>)}</div></>:<div style={{textAlign:"center",padding:40,color:T.textMuted}}>Portföye varlık ekleyin</div>}
             </div>
             <div style={st.card}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h3 style={{fontSize:15,fontWeight:600}}>Varlıklar</h3><button onClick={()=>{setEditIdx(null);setNcCoin(null);setNcAmount("");setNcBuyPrice("");setNcSection("Genel");setShowAdd(true);}} style={{padding:"7px 14px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+ Ekle</button></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h3 style={{fontSize:15,fontWeight:600}}>Varlıklar</h3><button onClick={()=>{setEditIdx(null);setNcCoin(null);setNcAmount("");setNcBuyPrice("");setNcSection("Genel");setShowAdd(true);}} style={{padding:"7px 14px",background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:8,color:T.text,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+ Ekle</button></div>
               <div style={{overflowX:"auto"}}>
                 {pData.length===0?<div style={{textAlign:"center",padding:40,color:T.textMuted}}><div style={{fontSize:48,marginBottom:12}}>📊</div>Henüz varlık yok</div>:
                 <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["","Coin","Fiyat","24s","Miktar","Değer","Ağırlık","K/Z","İşlem"].map((h,i)=><th key={i} style={{...st.th,textAlign:i<=1?"left":i===8?"center":"right",width:i===0?30:undefined}}>{h}</th>)}</tr></thead><tbody>
@@ -1610,7 +1610,7 @@ export default function CryptoPortfolio() {
                         onDragOver={e=>{e.preventDefault();setDragOverSection(secName);}}
                         onDragLeave={()=>setDragOverSection(null)}
                         onDrop={e=>{e.preventDefault();if(dragIdx!==null){setPortfolio(p=>p.map((it,i)=>i===dragIdx?{...it,section:secName}:it));}setDragIdx(null);setDragOverSection(null);}}>
-                        <td colSpan={9} style={{padding:items.length>0?"14px 12px 8px":"10px 12px",borderBottom:`2px solid ${isDropTarget?"#9333EA":T.borderLight}`,background:isDropTarget?"#9333EA08":"#0d111799",transition:"all .2s"}}>
+                        <td colSpan={9} style={{padding:items.length>0?"14px 12px 8px":"10px 12px",borderBottom:`2px solid ${isDropTarget?"#9333EA":T.borderLight}`,background:isDropTarget?"#9333EA08":`${T.bgCardSolid}99`,transition:"all .2s"}}>
                           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                             <div style={{display:"flex",alignItems:"center",gap:10}}>
                               <div style={{width:4,height:20,borderRadius:2,background:CLR[si%CLR.length]}}/>
@@ -1675,7 +1675,7 @@ export default function CryptoPortfolio() {
                         <td style={{...st.td,textAlign:"right",fontFamily:"'JetBrains Mono',monospace"}}>{item.amount}</td>
                         <td style={{...st.td,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontWeight:600}}>{fmt(item.currentValue)}</td>
                         <td style={{...st.td,textAlign:"right"}}><div style={{display:"flex",alignItems:"center",gap:6,justifyContent:"flex-end"}}><div style={{width:50,height:5,background:T.border,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:CLR[i%CLR.length],borderRadius:3}}/></div><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"#9333EA",fontWeight:600,minWidth:40,textAlign:"right"}}>{pct.toFixed(1)}%</span></div></td>
-                        <td style={{...st.td,textAlign:"right"}}><div style={{color:item.pnl>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace",fontWeight:600}}>{item.pnl>=0?"+":""}{fmt(item.pnl)}</div><div style={{color:item.pnl>=0?"#00ff88aa":"#ff4466aa",fontSize:11}}>{fPct(item.pnlPct)}</div></td>
+                        <td style={{...st.td,textAlign:"right"}}><div style={{color:item.pnl>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace",fontWeight:600}}>{item.pnl>=0?"+":""}{fmt(item.pnl)}</div><div style={{color:item.pnl>=0?`${T.green}aa`:`${T.red}aa`,fontSize:11}}>{fPct(item.pnlPct)}</div></td>
                         <td style={{...st.td,textAlign:"center"}}><div style={{display:"flex",gap:6,justifyContent:"center"}}><button onClick={()=>{const it=portfolio[i];const c=knownCoins.find(x=>x.id===it.coinId);setNcCoin(c||{id:it.coinId,symbol:"?",name:it.coinId});setNcAmount(""+it.amount);setNcBuyPrice(""+it.buyPrice);setNcSection(it.section||"Genel");setEditIdx(i);setShowAdd(true);}} style={{width:28,height:28,border:`1px solid ${T.borderLight}`,background:T.bgCardSolid,color:T.textSecondary,borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✎</button><button onClick={()=>setDelConfirm(i)} style={{width:28,height:28,border:`1px solid ${T.red}33`,background:T.redGlow,color:T.red,borderRadius:6,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div></td></tr>
                       );
                     });
@@ -1720,7 +1720,7 @@ export default function CryptoPortfolio() {
           {portfolioSummaries.length>1&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:12,marginBottom:20}}>
             {portfolioSummaries.map((ps,i)=>(<div key={ps.name} style={{...st.card,padding:16,cursor:"pointer",transition:"border-color .2s"}} onClick={()=>{setActivePortfolio(ps.name);setTab("portfolio");}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><span style={{fontSize:14,fontWeight:600}}>{ps.name}</span><span style={{fontSize:11,color:T.textMuted}}>{ps.count} varlık</span></div>
-              <div style={{fontSize:20,fontWeight:700,fontFamily:"'Inter',monospace",color:"#fff",marginBottom:4}}>{fmt(ps.value)}</div>
+              <div style={{fontSize:20,fontWeight:700,fontFamily:"'Inter',monospace",color:T.text,marginBottom:4}}>{fmt(ps.value)}</div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:12,fontFamily:"'JetBrains Mono',monospace"}}><span style={{color:ps.pnl>=0?T.green:T.red}}>{ps.pnl>=0?"+":""}{fmt(ps.pnl)} ({fPct(ps.pnlPct)})</span><span style={{color:"#9333EA"}}>{allTotVal>0?(ps.value/allTotVal*100).toFixed(1):0}%</span></div>
             </div>))}
           </div>}
@@ -1737,7 +1737,7 @@ export default function CryptoPortfolio() {
               const absPct=Math.abs(item.change24h);
               const maxPct=Math.max(...sorted.map(x=>Math.abs(x.change24h)),1);
               const barW=Math.max((absPct/maxPct)*100,2);
-              return(<div key={item.coinId} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:i<max-1?"1px solid ${T.bgCardSolid}":"none"}}>
+              return(<div key={item.coinId} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:i<max-1?`1px solid ${T.bgCardSolid}`:"none"}}>
                 <div style={{width:26,height:26,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,fontFamily:"'Inter',monospace",background:mc+"18",color:mc}}>{item.coin?.symbol?.charAt(0)||"?"}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
@@ -1771,7 +1771,7 @@ export default function CryptoPortfolio() {
             {allPData.length>0&&<div style={st.card}>
               <h3 style={{fontSize:14,fontWeight:600,marginBottom:12}}>Dağılım</h3>
               <ResponsiveContainer width="100%" height={200}><PieChart><Pie data={allPieData.slice(0,12)} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none">{allPieData.slice(0,12).map((e,i)=><Cell key={i} fill={e.color}/>)}</Pie><Tooltip formatter={v=>[fmt(v),""]} contentStyle={st.tt}/></PieChart></ResponsiveContainer>
-              <div style={{marginTop:8,maxHeight:180,overflowY:"auto"}}>{allPieData.map((item,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0",borderBottom:"1px solid ${T.bgCardSolid}"}}><span style={{width:8,height:8,borderRadius:2,background:item.color,flexShrink:0}}/><span style={{flex:1,fontSize:12,color:T.textSecondary}}>{item.name}</span><span style={{fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:"#9333EA"}}>{allTotVal>0?((item.value/allTotVal)*100).toFixed(1):0}%</span></div>)}</div>
+              <div style={{marginTop:8,maxHeight:180,overflowY:"auto"}}>{allPieData.map((item,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0",borderBottom:`1px solid ${T.bgCardSolid}`}}><span style={{width:8,height:8,borderRadius:2,background:item.color,flexShrink:0}}/><span style={{flex:1,fontSize:12,color:T.textSecondary}}>{item.name}</span><span style={{fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:"#9333EA"}}>{allTotVal>0?((item.value/allTotVal)*100).toFixed(1):0}%</span></div>)}</div>
             </div>}
             <div style={st.card}>
               <h3 style={{fontSize:14,fontWeight:600,marginBottom:12}}>Tüm Varlıklar</h3>
@@ -1851,7 +1851,7 @@ export default function CryptoPortfolio() {
 
       {/* ═══ ADD/EDIT MODAL with CoinPicker ═══ */}
       {showAdd&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}} onClick={()=>{setShowAdd(false);setEditIdx(null);}}>
-        <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:`1px solid ${T.borderLight}`,borderRadius:16,width:"100%",maxWidth:480,boxShadow:"0 24px 64px rgba(0,0,0,.5)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:`linear-gradient(135deg,${T.bgCardSolid},${T.bgSecondary})`,border:`1px solid ${T.borderLight}`,borderRadius:16,width:"100%",maxWidth:480,boxShadow:"0 24px 64px rgba(0,0,0,.5)",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px",borderBottom:`1px solid ${T.border}`}}><h3 style={{fontSize:16,fontWeight:600}}>{editIdx!==null?"Varlığı Düzenle":"Yeni Varlık Ekle"}</h3><button style={{background:"none",border:"none",color:T.textMuted,fontSize:18,cursor:"pointer"}} onClick={()=>{setShowAdd(false);setEditIdx(null);}}>✕</button></div>
           <div style={{padding:20}}>
             {/* Coin Picker */}
@@ -1882,7 +1882,7 @@ export default function CryptoPortfolio() {
                             return;
                           }
                         }
-                      } catch(e) { console.log("FMP quote error:", e); }
+                      } catch(e) {}
                     }
                     // Crypto — CoinGecko fallback
                     if (coin.market === "crypto" || (!coin.isStock && !coin.isFMP)) {
@@ -1916,7 +1916,7 @@ export default function CryptoPortfolio() {
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:36,height:36,borderRadius:8,background:"#9333EA15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,fontFamily:"'Inter',monospace",color:"#9333EA"}}>{ncCoin.symbol?.charAt(0)}</div>
                 <div><div style={{fontSize:14,fontWeight:600,color:T.text}}>{ncCoin.name}</div><div style={{fontSize:11,color:T.textMuted,fontFamily:"'JetBrains Mono',monospace"}}>{ncCoin.symbol}</div></div>
-                {prices[ncCoin.id]&&<div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:14,fontFamily:"'JetBrains Mono',monospace",color:T.green,fontWeight:600}}>{fmt(prices[ncCoin.id].usd,prices[ncCoin.id].usd<1?4:2)}</div><div style={{fontSize:10,color:prices[ncCoin.id]?.usd_24h_change>=0?"#00ff88aa":"#ff4466aa"}}>{fPct(prices[ncCoin.id]?.usd_24h_change||0)}</div></div>}
+                {prices[ncCoin.id]&&<div style={{marginLeft:"auto",textAlign:"right"}}><div style={{fontSize:14,fontFamily:"'JetBrains Mono',monospace",color:T.green,fontWeight:600}}>{fmt(prices[ncCoin.id].usd,prices[ncCoin.id].usd<1?4:2)}</div><div style={{fontSize:10,color:prices[ncCoin.id]?.usd_24h_change>=0?`${T.green}aa`:`${T.red}aa`}}>{fPct(prices[ncCoin.id]?.usd_24h_change||0)}</div></div>}
               </div>
             </div>}
 
@@ -1967,7 +1967,7 @@ export default function CryptoPortfolio() {
                   ["Tahmini K/Z", (()=>{const pnl=ncAmount*((prices[ncCoin.id]?.usd||0)-ncBuyPrice);return {text:(pnl>=0?"+":"")+fmt(Math.abs(pnl))+" ("+fPct(ncBuyPrice>0?((prices[ncCoin.id]?.usd||0)/ncBuyPrice-1)*100:0)+")",color:pnl>=0?T.green:T.red};})(), null],
                 ].map(([l,v,c],i)=>{
                   const isKZ = l==="Tahmini K/Z";
-                  return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",fontSize:13,borderBottom:i<2?"1px solid ${T.bgCardSolid}":"none"}}>
+                  return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",fontSize:13,borderBottom:i<2?`1px solid ${T.bgCardSolid}`:"none"}}>
                     <span style={{color:T.textMuted}}>{l}</span>
                     <span style={{fontWeight:isKZ?700:600,fontFamily:"'JetBrains Mono',monospace",color:isKZ?v.color:c}}>{isKZ?v.text:v}</span>
                   </div>;
@@ -1988,21 +1988,21 @@ export default function CryptoPortfolio() {
               </div>
             </div>}
 
-            <button onClick={addCoin} disabled={!ncCoin||!ncAmount||!ncBuyPrice} style={{width:"100%",padding:13,background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:10,color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",opacity:ncCoin&&ncAmount&&ncBuyPrice?1:.5,boxShadow:"0 4px 20px rgba(247,147,26,.2)"}}>{editIdx!==null?"Güncelle":"Portföye Ekle"}</button>
+            <button onClick={addCoin} disabled={!ncCoin||!ncAmount||!ncBuyPrice} style={{width:"100%",padding:13,background:"linear-gradient(135deg,#9333EA,#D4A017)",border:"none",borderRadius:10,color:T.text,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",opacity:ncCoin&&ncAmount&&ncBuyPrice?1:.5,boxShadow:"0 4px 20px rgba(247,147,26,.2)"}}>{editIdx!==null?"Güncelle":"Portföye Ekle"}</button>
           </div>
         </div>
       </div>}
 
       {/* Delete Confirm */}
       {delConfirm!==null&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}} onClick={()=>setDelConfirm(null)}>
-        <div style={{background:"linear-gradient(135deg,#131a27,${T.bgSecondary})",border:`1px solid ${T.borderLight}`,borderRadius:16,width:"100%",maxWidth:380,boxShadow:"0 24px 64px rgba(0,0,0,.5)"}} onClick={e=>e.stopPropagation()}>
+        <div style={{background:`linear-gradient(135deg,${T.bgCardSolid},${T.bgSecondary})`,border:`1px solid ${T.borderLight}`,borderRadius:16,width:"100%",maxWidth:380,boxShadow:"0 24px 64px rgba(0,0,0,.5)"}} onClick={e=>e.stopPropagation()}>
           <div style={{padding:30,textAlign:"center"}}>
             <div style={{fontSize:40,marginBottom:12}}>⚠️</div>
             <div style={{fontSize:16,fontWeight:600,marginBottom:8}}>Silmek istediğinize emin misiniz?</div>
             <div style={{color:T.textSecondary,fontSize:13,marginBottom:20}}>{pData[delConfirm]?.coin?.name} kaldırılacak.</div>
             <div style={{display:"flex",gap:10,justifyContent:"center"}}>
               <button onClick={()=>setDelConfirm(null)} style={{padding:"10px 24px",background:T.bgCardSolid,border:`1px solid ${T.borderLight}`,borderRadius:8,color:T.textSecondary,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>İptal</button>
-              <button onClick={()=>{setPortfolio(p=>p.filter((_,j)=>j!==delConfirm));setDelConfirm(null);}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#ff4466,#cc2244)",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Sil</button>
+              <button onClick={()=>{setPortfolio(p=>p.filter((_,j)=>j!==delConfirm));setDelConfirm(null);}} style={{padding:"10px 24px",background:`linear-gradient(135deg,${T.red},#DC2626)`,border:"none",borderRadius:8,color:T.text,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Sil</button>
             </div>
           </div>
         </div>
@@ -2019,7 +2019,7 @@ export default function CryptoPortfolio() {
             <span style={{fontSize:11,color:T.textMuted}}>{new Date().toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"})}</span>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <a href={pdfPreviewUrl} download={"InvestPulse_Rapor_"+new Date().getFullYear()+"_"+String(new Date().getMonth()+1).padStart(2,"0")+".pdf"} style={{background:T.green,color:"#000",padding:"8px 16px",borderRadius:8,fontSize:12,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>⬇ İndir</a>
+            <a href={pdfPreviewUrl} download={"InvestPulse_Rapor_"+new Date().getFullYear()+"_"+String(new Date().getMonth()+1).padStart(2,"0")+".pdf"} style={{background:T.green,color:"#0B0D15",padding:"8px 16px",borderRadius:8,fontSize:12,fontWeight:600,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>⬇ İndir</a>
             <button onClick={()=>{URL.revokeObjectURL(pdfPreviewUrl);setPdfPreviewUrl(null);}} style={{background:T.redGlow,border:`1px solid ${T.red}33`,color:T.red,padding:"8px 16px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>✕ Kapat</button>
           </div>
         </div>
@@ -2044,7 +2044,7 @@ export default function CryptoPortfolio() {
                     <div style={{fontSize:11,color:T.textMuted,marginTop:2}}>{d.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})} • {r.assets||0} varlık{r.user?" • "+r.user:""}</div>
                   </div>
                   <div style={{textAlign:"right"}}>
-                    <div style={{fontSize:14,fontWeight:700,fontFamily:"'Inter',monospace",color:"#fff"}}>{fmt(r.totVal||0)}</div>
+                    <div style={{fontSize:14,fontWeight:700,fontFamily:"'Inter',monospace",color:T.text}}>{fmt(r.totVal||0)}</div>
                     <div style={{fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:(r.pnl||0)>=0?T.green:T.red,marginTop:2}}>{(r.pnl||0)>=0?"+":""}{fmt(r.pnl||0)} ({r.pnlPct!=null?fPct(r.pnlPct):"—"})</div>
                   </div>
                 </div>);
@@ -2052,7 +2052,7 @@ export default function CryptoPortfolio() {
             </div>}
           </div>
           <div style={{padding:"12px 16px",borderTop:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between"}}>
-            <button onClick={generateReport} style={{background:T.green,border:"none",color:"#000",padding:"8px 20px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>📄 Yeni Rapor Oluştur</button>
+            <button onClick={generateReport} style={{background:T.green,border:"none",color:"#0B0D15",padding:"8px 20px",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600}}>📄 Yeni Rapor Oluştur</button>
             {reportHistory.length>0&&<button onClick={()=>{localStorage.removeItem("ip_report_history");setReportHistory([]);}} style={{background:"none",border:`1px solid ${T.red}33`,color:T.red,padding:"8px 14px",borderRadius:8,cursor:"pointer",fontSize:11}}>Geçmişi Temizle</button>}
           </div>
         </div>
